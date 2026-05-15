@@ -4,22 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Operation: Fake Strike</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        * { touch-action: none; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
+        canvas { display: block; width: 100%; height: 100%; }
+        
+        #lobby { position: fixed; inset: 0; background: #111; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; padding: 20px; }
+        #lobby input { padding: 15px; font-size: 16px; border-radius: 8px; border: 1px solid #444; margin-bottom: 10px; text-align: center; background: #222; color: #fff; width: 260px; }
+        
+        .char-selection { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .char-btn { padding: 10px; border: 2px solid #444; border-radius: 8px; background: #222; color: white; font-size: 10px; cursor: pointer; text-align: center; }
+        .char-btn.selected { border-color: #00ff00; background: #113311; }
+        #btn-start { padding: 15px 50px; background: #00ff00; border: none; border-radius: 8px; font-weight: bold; color: #000; cursor: pointer; }
+
+        #ui-layer { position: fixed; inset: 0; z-index: 20; pointer-events: none; display: none; }
+        .interactive { pointer-events: auto; }
+
+        #config-btn { position: absolute; top: 20px; left: 20px; width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; border: 1px solid rgba(255,255,255,0.2); }
+        #online-count { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #00ff00; font-weight: bold; font-size: 14px; text-shadow: 1px 1px 2px #000; }
+        
+        #kill-feed { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.8); font-weight: bold; font-size: 14px; text-align: center; text-shadow: 1px 1px 2px #000; pointer-events: none; width: 100%; }
+
+        #ranking-box { position: absolute; top: 70px; left: 20px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; color: #fff; font-size: 11px; min-width: 100px; border-left: 3px solid #00ff00; }
+        #ranking-box h3 { margin: 0 0 5px 0; font-size: 10px; color: #00ff00; text-transform: capitalize; }
+        #scoreboard { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.4); padding: 8px; color: white; border-radius: 4px; font-size: 12px; }
+
+        #config-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 25px; border-radius: 15px; border: 1px solid #444; color: white; z-index: 2000; display: none; min-width: 280px; }
+        #config-modal h2 { margin-top: 0; font-size: 18px; text-align: center; }
+        .setting-row { margin: 15px 0; }
+        input[type=range] { width: 100%; accent-color: #00ff00; }
+        .close-modal { width: 100%; padding: 12px; background: #00ff00; border: none; border-radius: 8px; font-weight: bold; margin-top: 10px; }
+        .opt-btn { background: #444; border: none; padding: 10px; color: white; border-radius: 5px; width: 100%; margin-top: 8px; font-size: 12px; cursor: pointer; }
+
+        #crosshair-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; }
+        #dot { width: 4px; height: 4px; background: #fff; border-radius: 50%; }
+        #hitmarker { position: absolute; width: 25px; height: 25px; border: 2px solid red; transform: rotate(45deg); display: none; }
+        #reload-circle { position: absolute; width: 40px; height: 40px; transform: rotate(-90deg); display: none; }
+        #reload-circle circle { fill: none; stroke: #fff; stroke-width: 4; stroke-dasharray: 100; stroke-dashoffset: 100; }
+        #joystick-area { position: absolute; bottom: 40px; left: 40px; width: 110px; height: 110px; background: rgba(255,255,255,0.05); border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; }
+        #joystick-knob { width: 45px; height: 45px; background: #fff; border-radius: 50%; opacity: 0.2; }
+        #shoot-btn { position: absolute; bottom: 50px; right: 50px; width: 90px; height: 90px; background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 50%; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+    </style>
 </head>
 <body>
+
     <div id="lobby">
         <h1>FAKE STRIKE</h1>
         <input type="text" id="player-name" placeholder="NOME DO JOGADOR" maxlength="10">
         <input type="password" id="player-pass" placeholder="SENHA" maxlength="8">
         <div class="char-selection">
-            <div class="char-btn selected" data-color="0x00ff00">VERDE (M)</div>
-            <div class="char-btn" data-color="0x0000ff">AZUL (M)</div>
-            <div class="char-btn" data-color="0x555555">CINZA (M)</div>
-            <div class="char-btn" data-color="0xff00ff">ROSA (F)</div>
-            <div class="char-btn" data-color="0xffff00">AMARELO (F)</div>
-            <div class="char-btn" data-color="0x00ffff">CIANO (F)</div>
+            <div class="char-btn selected" data-color="0x00ff00">Verde (M)</div>
+            <div class="char-btn" data-color="0x0000ff">Azul (M)</div>
+            <div class="char-btn" data-color="0x555555">Cinza (M)</div>
+            <div class="char-btn" data-color="0xff00ff">Rosa (F)</div>
+            <div class="char-btn" data-color="0xffff00">Amarelo (F)</div>
+            <div class="char-btn" data-color="0x00ffff">Ciano (F)</div>
         </div>
-        <button id="btn-start">ENTRAR / CRIAR</button>
+        <button id="btn-start">Entrar / Criar</button>
         <p id="login-error" style="color: red; font-size: 11px; margin-top: 10px; display: none;"></p>
     </div>
 
@@ -61,6 +102,228 @@
             "firebase/database": "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"
         } }
     </script>
-    <script type="module" src="ui.js"></script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { initializeApp } from "firebase/app";
+        import { getDatabase, ref, set, onValue, onDisconnect, update, get } from "firebase/database";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBqRAsWfP4w-r82PZOaJcDck7W8Aeph3p8",
+            authDomain: "teuzin-games.firebaseapp.com",
+            databaseURL: "https://teuzin-games-default-rtdb.firebaseio.com",
+            projectId: "teuzin-games",
+            storageBucket: "teuzin-games.firebasestorage.app",
+            messagingSenderId: "548192563345",
+            appId: "1:548192563345:web:e729e39f9f266aa6a68f30"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const toTitleCase = (str) => {
+            if (!str) return "";
+            return str.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+        };
+
+        let myName = localStorage.getItem('fs_name') || "";
+        let myPass = localStorage.getItem('fs_pass') || "";
+        let myColor = localStorage.getItem('fs_color') || "0x00ff00";
+        let sensitivity = parseFloat(localStorage.getItem('fs_sens')) || 1.0;
+        let rankVisible = localStorage.getItem('fs_rank_hide') !== "true";
+        let kills = 0, deaths = 0;
+
+        const lobby = document.getElementById('lobby');
+        const ui = document.getElementById('ui-layer');
+        const configModal = document.getElementById('config-modal');
+        const rankingBox = document.getElementById('ranking-box');
+
+        if(myName) document.getElementById('player-name').value = myName;
+        if(myPass) document.getElementById('player-pass').value = myPass;
+        rankingBox.style.display = rankVisible ? 'block' : 'none';
+
+        document.querySelectorAll('.char-btn').forEach(btn => {
+            if(btn.dataset.color === myColor) btn.classList.add('selected');
+            else btn.classList.remove('selected');
+            btn.onclick = () => {
+                document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                myColor = btn.dataset.color;
+            };
+        });
+
+        document.getElementById('btn-start').onclick = async () => {
+            const user = document.getElementById('player-name').value.trim().toLowerCase();
+            const pass = document.getElementById('player-pass').value.trim();
+            if(user.length < 3 || pass.length < 3) return;
+            const snapshot = await get(ref(db, `users/${user}`));
+            const data = snapshot.val();
+            if(data && data.pass !== pass) {
+                const err = document.getElementById('login-error');
+                err.innerText = "Senha Incorreta!"; err.style.display = 'block';
+                return;
+            }
+            if(!data) await set(ref(db, `users/${user}`), { pass: pass, kills: 0, deaths: 0 });
+            myName = user; myPass = pass;
+            kills = data ? (data.kills || 0) : 0;
+            deaths = data ? (data.deaths || 0) : 0;
+            localStorage.setItem('fs_name', myName);
+            localStorage.setItem('fs_pass', myPass);
+            localStorage.setItem('fs_color', myColor);
+            lobby.style.display = 'none'; ui.style.display = 'block';
+            initGame();
+        };
+
+        function initGame() {
+            const playerRef = ref(db, `players/${myName}`);
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB);
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('game-canvas'), antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            scene.add(new THREE.Mesh(new THREE.PlaneGeometry(200,200), new THREE.MeshStandardMaterial({color: 0xEDC9AF})).rotateX(-Math.PI/2));
+            scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+            const gun = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.8), new THREE.MeshStandardMaterial({color: 0x111111}));
+            gun.position.set(0.35, -0.35, -0.6); camera.add(gun); scene.add(camera);
+
+            const otherPlayers = {}, hitboxes = [];
+            const sniperSound = new Audio('sniper.mp3'), hitSound = new Audio('hit.mp3');
+
+            onValue(ref(db, 'players'), (snapshot) => {
+                const data = snapshot.val(); if (!data) return;
+                document.getElementById('online-count').innerText = `${Object.keys(data).length} ONLINE`;
+                if (data[myName]?.lastKiller && data[myName].lastKiller !== "none") {
+                    document.getElementById('kill-feed').innerText = `${toTitleCase(data[myName].lastKiller)} eliminou você`;
+                    setTimeout(() => document.getElementById('kill-feed').innerText = "", 2000);
+                    update(playerRef, { lastKiller: "none" });
+                }
+                if (data[myName]?.isDead) {
+                    deaths++; update(ref(db, `users/${myName}`), { deaths: deaths });
+                    camera.position.set(Math.random()*80-40, 1.7, Math.random()*80-40);
+                    update(playerRef, { isDead: false, hp: 100 });
+                }
+                document.getElementById('scoreboard').innerText = `Kills: ${kills} | Deaths: ${deaths}`;
+                for (let id in data) {
+                    if (id === myName) continue;
+                    const pCol = parseInt(data[id].color || "0x00ff00");
+                    if (!otherPlayers[id]) {
+                        const group = new THREE.Group();
+                        const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.4, 0.4), new THREE.MeshStandardMaterial({color: pCol}));
+                        const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({color: pCol}));
+                        head.position.y = 1.0; head.userData = { type: 'head', parentId: id }; body.userData = { type: 'body', parentId: id };
+                        group.add(body, head); scene.add(group); otherPlayers[id] = { group, body, head }; hitboxes.push(body, head);
+                    }
+                    const p = otherPlayers[id];
+                    if(data[id].isDead) { p.group.rotation.x = -Math.PI/2; p.body.material.color.set(0xff0000); p.head.material.color.set(0xff0000); }
+                    else { p.group.rotation.x = 0; p.group.position.set(data[id].x, data[id].y - 0.5, data[id].z); p.group.rotation.y = data[id].ry; p.body.material.color.set(pCol); p.head.material.color.set(pCol); }
+                }
+            });
+
+            onValue(ref(db, 'users'), (snap) => {
+                const uData = snap.val(); if(!uData) return;
+                const arr = Object.keys(uData).map(k => ({name: k, kills: uData[k].kills || 0})).sort((a,b) => b.kills - a.kills);
+                document.getElementById('rank-list').innerHTML = arr.slice(0, 3).map((p, i) => `<div>${i+1}. ${toTitleCase(p.name.substring(0,10))}: ${p.kills}</div>`).join('');
+            });
+
+            onDisconnect(playerRef).remove();
+
+            let canShoot = true, joystickId = null, lookId = null, moveFwd = 0, moveSide = 0, lookYaw = 0, lookPitch = 0, lastX, lastY;
+            window.addEventListener('touchstart', (e) => {
+                for (let t of e.changedTouches) {
+                    if (t.target === document.getElementById('shoot-btn')) { disparar(); }
+                    else if (t.clientX < window.innerWidth/2) { joystickId = t.identifier; }
+                    else if (configModal.style.display !== 'block') { lookId = t.identifier; lastX = t.clientX; lastY = t.clientY; }
+                }
+            });
+
+            window.addEventListener('touchmove', (e) => {
+                for (let t of e.changedTouches) {
+                    if (t.identifier === joystickId) {
+                        const rect = document.getElementById('joystick-area').getBoundingClientRect();
+                        const dx = t.clientX - (rect.left + 55), dy = t.clientY - (rect.top + 55);
+                        const dist = Math.min(Math.sqrt(dx*dx + dy*dy), 50); const ang = Math.atan2(dy, dx);
+                        document.getElementById('joystick-knob').style.transform = `translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist}px)`;
+                        moveFwd = -Math.sin(ang) * (dist/50); moveSide = Math.cos(ang) * (dist/50);
+                    }
+                    if (t.identifier === lookId) {
+                        lookYaw -= (t.clientX - lastX) * (0.005 * sensitivity);
+                        lookPitch = Math.max(-1.4, Math.min(1.4, lookPitch - (t.clientY - lastY) * (0.005 * sensitivity)));
+                        lastX = t.clientX; lastY = t.clientY;
+                    }
+                }
+            });
+
+            window.addEventListener('touchend', (e) => {
+                for (let t of e.changedTouches) {
+                    if (t.identifier === joystickId) { joystickId = null; moveFwd = 0; moveSide = 0; document.getElementById('joystick-knob').style.transform = ''; }
+                    if (t.identifier === lookId) lookId = null;
+                }
+            });
+
+            async function disparar() {
+                if (!canShoot) return; canShoot = false;
+                sniperSound.pause(); sniperSound.currentTime = 0; sniperSound.play().catch(()=>{});
+                gun.position.z += 0.2; setTimeout(() => gun.position.z -= 0.2, 100);
+                const raycaster = new THREE.Raycaster(); raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+                const hits = raycaster.intersectObjects(hitboxes);
+                if (hits.length > 0) {
+                    const hit = hits[0].object; const tId = hit.userData.parentId;
+                    const snap = await get(ref(db, `players/${tId}`)); const pD = snap.val();
+                    if(pD && !pD.isDead) {
+                        hitSound.pause(); hitSound.currentTime = 0; hitSound.play().catch(()=>{});
+                        document.getElementById('hitmarker').style.display = 'block'; setTimeout(() => document.getElementById('hitmarker').style.display = 'none', 150);
+                        let nHP = (pD.hp || 100) - (hit.userData.type === 'head' ? 100 : 50);
+                        if(nHP <= 0) {
+                            update(ref(db, `players/${tId}`), { isDead: true, hp: 100, lastKiller: myName });
+                            kills++; update(ref(db, `users/${myName}`), { kills: kills });
+                            document.getElementById('kill-feed').innerText = `Você eliminou ${toTitleCase(tId)}`; setTimeout(() => document.getElementById('kill-feed').innerText = "", 2000);
+                        } else update(ref(db, `players/${tId}`), { hp: nHP });
+                    }
+                }
+                const dot = document.getElementById('dot'), circle = document.getElementById('reload-circle'), path = circle.querySelector('circle');
+                dot.style.display = 'none'; circle.style.display = 'block'; let prog = 100;
+                const inv = setInterval(() => { prog -= 4; path.style.strokeDashoffset = prog; if (prog <= 0) { clearInterval(inv); dot.style.display = 'block'; circle.style.display = 'none'; path.style.strokeDashoffset = 100; canShoot = true; } }, 48);
+            }
+
+            const clock = new THREE.Clock();
+            function animate() {
+                requestAnimationFrame(animate); const dt = clock.getDelta();
+                camera.rotation.order = 'YXZ'; camera.rotation.y = lookYaw; camera.rotation.x = lookPitch;
+                const dir = new THREE.Vector3(moveSide, 0, -moveFwd).applyQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), lookYaw));
+                camera.position.addScaledVector(dir, 3.5 * dt); camera.position.y = 1.7;
+                set(playerRef, { x: camera.position.x, y: camera.position.y, z: camera.position.z, ry: camera.rotation.y, isDead: false, hp: 100, color: myColor, lastKiller: "none" });
+                renderer.render(scene, camera);
+            }
+            animate();
+            window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+        }
+
+        document.getElementById('config-btn').onclick = () => configModal.style.display = 'block';
+        document.getElementById('btn-close-config').onclick = () => configModal.style.display = 'none';
+        
+        const sSlider = document.getElementById('sens-slider');
+        const sLabel = document.getElementById('sens-label');
+        sSlider.value = sensitivity;
+        sLabel.innerText = `Sensibilidade: ${sensitivity.toFixed(1)}`;
+        sSlider.oninput = () => {
+            sensitivity = parseFloat(sSlider.value);
+            sLabel.innerText = `Sensibilidade: ${sensitivity.toFixed(1)}`;
+            localStorage.setItem('fs_sens', sensitivity);
+        };
+
+        document.getElementById('fullscreen-btn').onclick = () => {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else if (document.exitFullscreen) document.exitFullscreen();
+        };
+
+        document.getElementById('toggle-rank-btn').onclick = () => {
+            rankVisible = !rankVisible;
+            localStorage.setItem('fs_rank_hide', !rankVisible);
+            rankingBox.style.display = rankVisible ? 'block' : 'none';
+            document.getElementById('toggle-rank-btn').innerText = rankVisible ? "Ocultar Ranking" : "Mostrar Ranking";
+        };
+    </script>
 </body>
 </html>
