@@ -197,7 +197,7 @@
 
         if (savedName) {
             nameInput.value = savedName;
-            nameInput.readOnly = true; // Bloqueia o nome se já existir
+            nameInput.readOnly = true;
             passInput.value = savedPass;
         }
 
@@ -309,7 +309,6 @@
             }
             if(!data) await set(ref(db, `users/${user}`), { pass: pass, kills: 0, deaths: 0 });
             
-            // Salva permanentemente no navegador
             localStorage.setItem('fs_name', user);
             localStorage.setItem('fs_pass', pass);
             
@@ -334,7 +333,7 @@
             const textureLoader = new THREE.TextureLoader();
             const floorTex = textureLoader.load('chao.jpg');
             floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
-            floorTex.repeat.set(50, 50); // Faz a textura repetir para não ficar esticada
+            floorTex.repeat.set(50, 50);
             
             const floorMat = new THREE.MeshStandardMaterial({ map: floorTex });
             const floorGeo = new THREE.PlaneGeometry(200, 200);
@@ -358,7 +357,7 @@
 
             onValue(ref(db, 'players'), (snapshot) => {
                 const data = snapshot.val(); if (!data) return;
-                document.getElementById('online-count').innerText = `${Object.keys(data).length} JOGADORES ONLINE`;
+                document.getElementById('online-count').innerText = `${Object.keys(data).length} ONLINE`;
                 if (data[myName]?.isDead) {
                     deaths++; update(ref(db, `users/${myName}`), { deaths: deaths });
                     const resp = getRandomSpawn(); camera.position.set(resp.x, 1.7, resp.z);
