@@ -9,36 +9,35 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
         canvas { display: block; width: 100%; height: 100%; }
         
-        #lobby { position: fixed; inset: 0; background: #111; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; padding: 20px; overflow-y: auto; }
-        #lobby h1 { margin-bottom: 10px; }
+        #lobby { position: fixed; inset: 0; background: #111; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; padding: 20px; }
+        #lobby h1 { margin-bottom: 20px; letter-spacing: 2px; }
         #lobby input { padding: 15px; font-size: 16px; border-radius: 8px; border: 1px solid #444; margin-bottom: 10px; text-align: center; background: #222; color: #fff; width: 260px; }
         
-        .char-selection { display: flex; gap: 15px; margin-bottom: 20px; }
-        .char-btn { padding: 15px; border: 2px solid #444; border-radius: 8px; background: #222; color: white; font-size: 12px; cursor: pointer; text-align: center; width: 120px; }
+        .char-selection { display: flex; gap: 10px; margin-bottom: 25px; }
+        .char-btn { padding: 12px; border: 2px solid #444; border-radius: 8px; background: #222; color: white; font-size: 11px; cursor: pointer; text-align: center; width: 130px; }
         .char-btn.selected { border-color: #00ff00; background: #113311; }
-        
-        .menu-settings { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 20px; width: 260px; }
-        .menu-settings label { display: block; font-size: 12px; margin-bottom: 5px; color: #aaa; }
-
         #btn-start { padding: 15px 50px; background: #00ff00; border: none; border-radius: 8px; font-weight: bold; color: #000; cursor: pointer; width: 290px; font-size: 16px; }
 
         #ui-layer { position: fixed; inset: 0; z-index: 20; pointer-events: none; display: none; }
         .interactive { pointer-events: auto; }
 
-        #config-btn { position: absolute; top: 20px; left: 20px; width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; border: 1px solid rgba(255,255,255,0.2); }
+        .config-trigger { position: absolute; top: 20px; left: 20px; width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; border: 1px solid rgba(255,255,255,0.2); z-index: 1001; }
         #online-count { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #00ff00; font-weight: bold; font-size: 14px; text-shadow: 1px 1px 2px #000; }
-        
         #kill-feed { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.8); font-weight: bold; font-size: 14px; text-align: center; text-shadow: 1px 1px 2px #000; pointer-events: none; width: 100%; }
-
         #ranking-box { position: absolute; top: 70px; left: 20px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; color: #fff; font-size: 11px; min-width: 100px; border-left: 3px solid #00ff00; }
         #ranking-box h3 { margin: 0 0 5px 0; font-size: 10px; color: #00ff00; }
         #scoreboard { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.4); padding: 8px; color: white; border-radius: 4px; font-size: 12px; }
 
-        #config-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 25px; border-radius: 15px; border: 1px solid #444; color: white; z-index: 2000; display: none; min-width: 280px; }
-        .setting-row { margin: 15px 0; }
+        #config-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 20px; border-radius: 15px; border: 1px solid #444; color: white; z-index: 2000; display: none; width: 280px; }
+        #config-modal h2 { margin: 0 0 15px 0; font-size: 16px; text-align: center; color: #00ff00; }
+        .setting-row { margin-bottom: 20px; }
+        .setting-row label { display: block; font-size: 12px; margin-bottom: 8px; color: #aaa; text-align: center; }
         input[type=range] { width: 100%; accent-color: #00ff00; }
-        .close-modal { width: 100%; padding: 12px; background: #00ff00; border: none; border-radius: 8px; font-weight: bold; margin-top: 10px; }
-        .opt-btn { background: #444; border: none; padding: 10px; color: white; border-radius: 5px; width: 100%; margin-top: 8px; font-size: 12px; cursor: pointer; }
+        
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .opt-btn { background: #333; border: 1px solid #444; padding: 10px 5px; color: white; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: bold; }
+        .btn-confirm { background: #00ff00; color: #000; border: none; }
+        .btn-exit { background: #aa0000; color: #fff; border: none; }
 
         #crosshair-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; }
         #dot { width: 4px; height: 4px; background: #fff; border-radius: 50%; }
@@ -52,6 +51,8 @@
 </head>
 <body>
 
+    <div id="config-btn-global" class="config-trigger interactive">⚙</div>
+
     <div id="lobby">
         <h1>FAKE STRIKE</h1>
         <input type="text" id="player-name" placeholder="NOME DO JOGADOR" maxlength="10">
@@ -62,29 +63,33 @@
             <div class="char-btn" data-color="0xff66cc">FEMININO (Rosa)</div>
         </div>
 
-        <div class="menu-settings">
-            <label id="menu-sens-label">Sensibilidade: 1.0</label>
-            <input type="range" class="sens-slider" min="0.1" max="3.0" step="0.1" value="1.0">
-            <button id="menu-fs-btn" class="opt-btn">Tela Cheia</button>
-        </div>
-
         <button id="btn-start">ENTRAR NO JOGO</button>
         <p id="login-error" style="color: red; font-size: 11px; margin-top: 10px; display: none;"></p>
     </div>
 
     <div id="config-modal" class="interactive">
-        <h2>Ajustes</h2>
+        <h2>CONFIGURAÇÕES</h2>
         <div class="setting-row">
             <label id="sens-label">Sensibilidade: 1.0</label>
-            <input type="range" class="sens-slider" min="0.1" max="3.0" step="0.1" value="1.0">
+            <input type="range" id="sens-slider" min="0.1" max="3.0" step="0.1" value="1.0">
         </div>
-        <button id="game-fs-btn" class="opt-btn">Tela Cheia</button>
-        <button id="toggle-rank-btn" class="opt-btn">Ocultar Ranking</button>
-        <button class="close-modal" id="btn-close-config">FECHAR</button>
+        
+        <div class="btn-grid">
+            <button id="fs-btn" class="opt-btn">TELA CHEIA</button>
+            <button id="rank-btn" class="opt-btn">RANKING: ON</button>
+        </div>
+
+        <div class="btn-grid">
+            <button id="lobby-btn" class="opt-btn" style="display:none;">LOBBY</button>
+            <button id="exit-btn" class="opt-btn btn-exit">FECHAR JOGO</button>
+        </div>
+
+        <div class="btn-grid" style="grid-template-columns: 1fr;">
+            <button id="close-config" class="opt-btn btn-confirm">FECHAR MENU</button>
+        </div>
     </div>
 
     <div id="ui-layer">
-        <div id="config-btn" class="interactive">⚙</div>
         <div id="online-count">0 ONLINE</div>
         <div id="kill-feed"></div>
         <div id="ranking-box">
@@ -134,27 +139,49 @@
         let myColor = localStorage.getItem('fs_color') || "0xff6600";
         let sensitivity = parseFloat(localStorage.getItem('fs_sens')) || 1.0;
         let rankVisible = localStorage.getItem('fs_rank_hide') !== "true";
-        let kills = 0, deaths = 0;
+        let kills = 0, deaths = 0, inGame = false;
 
         const lobby = document.getElementById('lobby');
         const ui = document.getElementById('ui-layer');
         const configModal = document.getElementById('config-modal');
         const rankingBox = document.getElementById('ranking-box');
+        const lobbyBtn = document.getElementById('lobby-btn');
 
-        function syncSens(val) {
-            sensitivity = parseFloat(val);
+        const sSlider = document.getElementById('sens-slider');
+        const sLabel = document.getElementById('sens-label');
+        sSlider.value = sensitivity;
+        sLabel.innerText = `Sensibilidade: ${sensitivity.toFixed(1)}`;
+        sSlider.oninput = () => {
+            sensitivity = parseFloat(sSlider.value);
+            sLabel.innerText = `Sensibilidade: ${sensitivity.toFixed(1)}`;
             localStorage.setItem('fs_sens', sensitivity);
-            document.querySelectorAll('.sens-slider').forEach(s => s.value = sensitivity);
-            document.getElementById('sens-label').innerText = `Sensibilidade: ${sensitivity.toFixed(1)}`;
-            document.getElementById('menu-sens-label').innerText = `Sensibilidade: ${sensitivity.toFixed(1)}`;
-        }
+        };
 
-        document.querySelectorAll('.sens-slider').forEach(s => s.oninput = (e) => syncSens(e.target.value));
-        syncSens(sensitivity);
+        document.getElementById('config-btn-global').onclick = () => {
+            lobbyBtn.style.display = inGame ? "block" : "none";
+            configModal.style.display = 'block';
+        };
+        document.getElementById('close-config').onclick = () => configModal.style.display = 'none';
+        
+        document.getElementById('fs-btn').onclick = () => {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else if (document.exitFullscreen) document.exitFullscreen();
+        };
+
+        document.getElementById('rank-btn').onclick = () => {
+            rankVisible = !rankVisible;
+            localStorage.setItem('fs_rank_hide', !rankVisible);
+            rankingBox.style.display = rankVisible ? 'block' : 'none';
+            document.getElementById('rank-btn').innerText = rankVisible ? "RANKING: ON" : "RANKING: OFF";
+        };
+
+        document.getElementById('lobby-btn').onclick = () => location.reload();
+        document.getElementById('exit-btn').onclick = () => { if(confirm("Deseja fechar o jogo?")) window.close(); };
 
         if(myName) document.getElementById('player-name').value = myName;
         if(myPass) document.getElementById('player-pass').value = myPass;
         rankingBox.style.display = rankVisible ? 'block' : 'none';
+        document.getElementById('rank-btn').innerText = rankVisible ? "RANKING: ON" : "RANKING: OFF";
 
         document.querySelectorAll('.char-btn').forEach(btn => {
             if(btn.dataset.color === myColor) btn.classList.add('selected');
@@ -183,7 +210,7 @@
             localStorage.setItem('fs_name', myName);
             localStorage.setItem('fs_pass', myPass);
             localStorage.setItem('fs_color', myColor);
-            lobby.style.display = 'none'; ui.style.display = 'block';
+            lobby.style.display = 'none'; ui.style.display = 'block'; inGame = true;
             initGame();
         };
 
@@ -200,13 +227,13 @@
             scene.add(new THREE.AmbientLight(0xffffff, 1.2));
             
             const gunGroup = new THREE.Group();
-            const body = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.18, 0.4), new THREE.MeshStandardMaterial({color: 0x222222}));
-            const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5), new THREE.MeshStandardMaterial({color: 0x111111}));
-            barrel.rotation.x = Math.PI / 2; barrel.position.z = -0.35;
-            const handle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, 0.1), new THREE.MeshStandardMaterial({color: 0x111111}));
-            handle.position.set(0, -0.15, 0);
-            gunGroup.add(body, barrel, handle);
-            gunGroup.position.set(0.35, -0.4, -0.7); camera.add(gunGroup); scene.add(camera);
+            const gBody = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.18, 0.4), new THREE.MeshStandardMaterial({color: 0x222222}));
+            const gBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5), new THREE.MeshStandardMaterial({color: 0x111111}));
+            gBarrel.rotation.x = Math.PI/2; gBarrel.position.z = -0.35;
+            const gHandle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, 0.1), new THREE.MeshStandardMaterial({color: 0x111111}));
+            gHandle.position.set(0, -0.15, 0);
+            gunGroup.add(gBody, gBarrel, gHandle); gunGroup.position.set(0.35, -0.4, -0.7);
+            camera.add(gunGroup); scene.add(camera);
 
             const otherPlayers = {}, hitboxes = [];
             const sniperSound = new Audio('sniper.mp3'), hitSound = new Audio('hit.mp3');
@@ -236,17 +263,8 @@
                         group.add(bBody, bHead); scene.add(group); otherPlayers[id] = { group, body: bBody, head: bHead }; hitboxes.push(bBody, bHead);
                     }
                     const p = otherPlayers[id];
-                    if(data[id].isDead) { 
-                        p.group.rotation.x = -Math.PI/2; 
-                        p.body.material.color.set(0xff0000); 
-                        p.head.material.color.set(0xff0000); 
-                    } else { 
-                        p.group.rotation.x = 0; 
-                        p.group.position.set(data[id].x, data[id].y - 0.5, data[id].z); 
-                        p.group.rotation.y = data[id].ry; 
-                        p.body.material.color.set(pCol); 
-                        p.head.material.color.set(pCol); 
-                    }
+                    if(data[id].isDead) { p.group.rotation.x = -Math.PI/2; p.body.material.color.set(0xff0000); p.head.material.color.set(0xff0000); }
+                    else { p.group.rotation.x = 0; p.group.position.set(data[id].x, data[id].y - 0.5, data[id].z); p.group.rotation.y = data[id].ry; p.body.material.color.set(pCol); p.head.material.color.set(pCol); }
                 }
             });
 
@@ -260,10 +278,11 @@
 
             let canShoot = true, joystickId = null, lookId = null, moveFwd = 0, moveSide = 0, lookYaw = 0, lookPitch = 0, lastX, lastY;
             window.addEventListener('touchstart', (e) => {
+                if(configModal.style.display === 'block') return;
                 for (let t of e.changedTouches) {
-                    if (t.target === document.getElementById('shoot-btn')) { disparar(); }
-                    else if (t.clientX < window.innerWidth/2) { joystickId = t.identifier; }
-                    else if (configModal.style.display !== 'block') { lookId = t.identifier; lastX = t.clientX; lastY = t.clientY; }
+                    if (t.target === document.getElementById('shoot-btn')) disparar();
+                    else if (t.clientX < window.innerWidth/2) joystickId = t.identifier;
+                    else { lookId = t.identifier; lastX = t.clientX; lastY = t.clientY; }
                 }
             });
 
@@ -316,30 +335,17 @@
                 const inv = setInterval(() => { prog -= 4; path.style.strokeDashoffset = prog; if (prog <= 0) { clearInterval(inv); dot.style.display = 'block'; circle.style.display = 'none'; path.style.strokeDashoffset = 100; canShoot = true; } }, 48);
             }
 
-            const clock = new THREE.Clock();
             function animate() {
-                requestAnimationFrame(animate); const dt = clock.getDelta();
+                requestAnimationFrame(animate);
                 camera.rotation.order = 'YXZ'; camera.rotation.y = lookYaw; camera.rotation.x = lookPitch;
                 const dir = new THREE.Vector3(moveSide, 0, -moveFwd).applyQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), lookYaw));
-                camera.position.addScaledVector(dir, 3.5 * dt); camera.position.y = 1.7;
+                camera.position.addScaledVector(dir, 0.1); camera.position.y = 1.7;
                 set(playerRef, { x: camera.position.x, y: camera.position.y, z: camera.position.z, ry: camera.rotation.y, isDead: false, hp: 100, color: myColor, lastKiller: "none" });
                 renderer.render(scene, camera);
             }
             animate();
             window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
         }
-
-        const handleFS = () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else if (document.exitFullscreen) document.exitFullscreen(); };
-        document.getElementById('menu-fs-btn').onclick = handleFS;
-        document.getElementById('game-fs-btn').onclick = handleFS;
-        document.getElementById('config-btn').onclick = () => configModal.style.display = 'block';
-        document.getElementById('btn-close-config').onclick = () => configModal.style.display = 'none';
-        document.getElementById('toggle-rank-btn').onclick = () => {
-            rankVisible = !rankVisible;
-            localStorage.setItem('fs_rank_hide', !rankVisible);
-            rankingBox.style.display = rankVisible ? 'block' : 'none';
-            document.getElementById('toggle-rank-btn').innerText = rankVisible ? "Ocultar Ranking" : "Mostrar Ranking";
-        };
     </script>
 </body>
 </html>
