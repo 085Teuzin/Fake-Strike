@@ -9,13 +9,18 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
         canvas { display: block; width: 100%; height: 100%; }
         
-        #lobby { position: fixed; inset: 0; background: #111; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; padding: 20px; }
+        #lobby { position: fixed; inset: 0; background: #111; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; padding: 20px; overflow-y: auto; }
+        #lobby h1 { margin-bottom: 10px; }
         #lobby input { padding: 15px; font-size: 16px; border-radius: 8px; border: 1px solid #444; margin-bottom: 10px; text-align: center; background: #222; color: #fff; width: 260px; }
         
-        .char-selection { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .char-btn { padding: 10px; border: 2px solid #444; border-radius: 8px; background: #222; color: white; font-size: 10px; cursor: pointer; text-align: center; }
+        .char-selection { display: flex; gap: 15px; margin-bottom: 20px; }
+        .char-btn { padding: 15px; border: 2px solid #444; border-radius: 8px; background: #222; color: white; font-size: 12px; cursor: pointer; text-align: center; width: 120px; }
         .char-btn.selected { border-color: #00ff00; background: #113311; }
-        #btn-start { padding: 15px 50px; background: #00ff00; border: none; border-radius: 8px; font-weight: bold; color: #000; cursor: pointer; }
+        
+        .menu-settings { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 20px; width: 260px; }
+        .menu-settings label { display: block; font-size: 12px; margin-bottom: 5px; color: #aaa; }
+
+        #btn-start { padding: 15px 50px; background: #00ff00; border: none; border-radius: 8px; font-weight: bold; color: #000; cursor: pointer; width: 290px; font-size: 16px; }
 
         #ui-layer { position: fixed; inset: 0; z-index: 20; pointer-events: none; display: none; }
         .interactive { pointer-events: auto; }
@@ -26,11 +31,10 @@
         #kill-feed { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.8); font-weight: bold; font-size: 14px; text-align: center; text-shadow: 1px 1px 2px #000; pointer-events: none; width: 100%; }
 
         #ranking-box { position: absolute; top: 70px; left: 20px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; color: #fff; font-size: 11px; min-width: 100px; border-left: 3px solid #00ff00; }
-        #ranking-box h3 { margin: 0 0 5px 0; font-size: 10px; color: #00ff00; text-transform: capitalize; }
+        #ranking-box h3 { margin: 0 0 5px 0; font-size: 10px; color: #00ff00; }
         #scoreboard { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.4); padding: 8px; color: white; border-radius: 4px; font-size: 12px; }
 
         #config-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #222; padding: 25px; border-radius: 15px; border: 1px solid #444; color: white; z-index: 2000; display: none; min-width: 280px; }
-        #config-modal h2 { margin-top: 0; font-size: 18px; text-align: center; }
         .setting-row { margin: 15px 0; }
         input[type=range] { width: 100%; accent-color: #00ff00; }
         .close-modal { width: 100%; padding: 12px; background: #00ff00; border: none; border-radius: 8px; font-weight: bold; margin-top: 10px; }
@@ -52,15 +56,19 @@
         <h1>FAKE STRIKE</h1>
         <input type="text" id="player-name" placeholder="NOME DO JOGADOR" maxlength="10">
         <input type="password" id="player-pass" placeholder="SENHA" maxlength="8">
+        
         <div class="char-selection">
-            <div class="char-btn selected" data-color="0x00ff00">Verde (M)</div>
-            <div class="char-btn" data-color="0x0000ff">Azul (M)</div>
-            <div class="char-btn" data-color="0x555555">Cinza (M)</div>
-            <div class="char-btn" data-color="0xff00ff">Rosa (F)</div>
-            <div class="char-btn" data-color="0xffff00">Amarelo (F)</div>
-            <div class="char-btn" data-color="0x00ffff">Ciano (F)</div>
+            <div class="char-btn selected" data-color="0xff6600">MASCULINO (Laranja)</div>
+            <div class="char-btn" data-color="0xff66cc">FEMININO (Rosa)</div>
         </div>
-        <button id="btn-start">Entrar / Criar</button>
+
+        <div class="menu-settings">
+            <label id="menu-sens-label">Sensibilidade: 1.0</label>
+            <input type="range" class="sens-slider" min="0.1" max="3.0" step="0.1" value="1.0">
+            <button id="menu-fs-btn" class="opt-btn">Tela Cheia</button>
+        </div>
+
+        <button id="btn-start">ENTRAR NO JOGO</button>
         <p id="login-error" style="color: red; font-size: 11px; margin-top: 10px; display: none;"></p>
     </div>
 
@@ -68,9 +76,9 @@
         <h2>Ajustes</h2>
         <div class="setting-row">
             <label id="sens-label">Sensibilidade: 1.0</label>
-            <input type="range" id="sens-slider" min="0.1" max="3.0" step="0.1" value="1.0">
+            <input type="range" class="sens-slider" min="0.1" max="3.0" step="0.1" value="1.0">
         </div>
-        <button id="fullscreen-btn" class="opt-btn">Tela Cheia</button>
+        <button id="game-fs-btn" class="opt-btn">Tela Cheia</button>
         <button id="toggle-rank-btn" class="opt-btn">Ocultar Ranking</button>
         <button class="close-modal" id="btn-close-config">FECHAR</button>
     </div>
@@ -121,14 +129,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        const toTitleCase = (str) => {
-            if (!str) return "";
-            return str.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
-        };
-
         let myName = localStorage.getItem('fs_name') || "";
         let myPass = localStorage.getItem('fs_pass') || "";
-        let myColor = localStorage.getItem('fs_color') || "0x00ff00";
+        let myColor = localStorage.getItem('fs_color') || "0xff6600";
         let sensitivity = parseFloat(localStorage.getItem('fs_sens')) || 1.0;
         let rankVisible = localStorage.getItem('fs_rank_hide') !== "true";
         let kills = 0, deaths = 0;
@@ -138,13 +141,23 @@
         const configModal = document.getElementById('config-modal');
         const rankingBox = document.getElementById('ranking-box');
 
+        function syncSens(val) {
+            sensitivity = parseFloat(val);
+            localStorage.setItem('fs_sens', sensitivity);
+            document.querySelectorAll('.sens-slider').forEach(s => s.value = sensitivity);
+            document.getElementById('sens-label').innerText = `Sensibilidade: ${sensitivity.toFixed(1)}`;
+            document.getElementById('menu-sens-label').innerText = `Sensibilidade: ${sensitivity.toFixed(1)}`;
+        }
+
+        document.querySelectorAll('.sens-slider').forEach(s => s.oninput = (e) => syncSens(e.target.value));
+        syncSens(sensitivity);
+
         if(myName) document.getElementById('player-name').value = myName;
         if(myPass) document.getElementById('player-pass').value = myPass;
         rankingBox.style.display = rankVisible ? 'block' : 'none';
 
         document.querySelectorAll('.char-btn').forEach(btn => {
             if(btn.dataset.color === myColor) btn.classList.add('selected');
-            else btn.classList.remove('selected');
             btn.onclick = () => {
                 document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
@@ -153,7 +166,7 @@
         });
 
         document.getElementById('btn-start').onclick = async () => {
-            const user = document.getElementById('player-name').value.trim().toLowerCase();
+            const user = document.getElementById('player-name').value.trim();
             const pass = document.getElementById('player-pass').value.trim();
             if(user.length < 3 || pass.length < 3) return;
             const snapshot = await get(ref(db, `users/${user}`));
@@ -185,8 +198,15 @@
 
             scene.add(new THREE.Mesh(new THREE.PlaneGeometry(200,200), new THREE.MeshStandardMaterial({color: 0xEDC9AF})).rotateX(-Math.PI/2));
             scene.add(new THREE.AmbientLight(0xffffff, 1.2));
-            const gun = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.8), new THREE.MeshStandardMaterial({color: 0x111111}));
-            gun.position.set(0.35, -0.35, -0.6); camera.add(gun); scene.add(camera);
+            
+            const gunGroup = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.18, 0.4), new THREE.MeshStandardMaterial({color: 0x222222}));
+            const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5), new THREE.MeshStandardMaterial({color: 0x111111}));
+            barrel.rotation.x = Math.PI / 2; barrel.position.z = -0.35;
+            const handle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, 0.1), new THREE.MeshStandardMaterial({color: 0x111111}));
+            handle.position.set(0, -0.15, 0);
+            gunGroup.add(body, barrel, handle);
+            gunGroup.position.set(0.35, -0.4, -0.7); camera.add(gunGroup); scene.add(camera);
 
             const otherPlayers = {}, hitboxes = [];
             const sniperSound = new Audio('sniper.mp3'), hitSound = new Audio('hit.mp3');
@@ -195,7 +215,7 @@
                 const data = snapshot.val(); if (!data) return;
                 document.getElementById('online-count').innerText = `${Object.keys(data).length} ONLINE`;
                 if (data[myName]?.lastKiller && data[myName].lastKiller !== "none") {
-                    document.getElementById('kill-feed').innerText = `${toTitleCase(data[myName].lastKiller)} eliminou você`;
+                    document.getElementById('kill-feed').innerText = `${data[myName].lastKiller} eliminou você`;
                     setTimeout(() => document.getElementById('kill-feed').innerText = "", 2000);
                     update(playerRef, { lastKiller: "none" });
                 }
@@ -207,24 +227,33 @@
                 document.getElementById('scoreboard').innerText = `Kills: ${kills} | Deaths: ${deaths}`;
                 for (let id in data) {
                     if (id === myName) continue;
-                    const pCol = parseInt(data[id].color || "0x00ff00");
+                    const pCol = parseInt(data[id].color || "0xff6600");
                     if (!otherPlayers[id]) {
                         const group = new THREE.Group();
-                        const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.4, 0.4), new THREE.MeshStandardMaterial({color: pCol}));
-                        const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({color: pCol}));
-                        head.position.y = 1.0; head.userData = { type: 'head', parentId: id }; body.userData = { type: 'body', parentId: id };
-                        group.add(body, head); scene.add(group); otherPlayers[id] = { group, body, head }; hitboxes.push(body, head);
+                        const bBody = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.4, 0.4), new THREE.MeshStandardMaterial({color: pCol}));
+                        const bHead = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({color: pCol}));
+                        bHead.position.y = 1.0; bHead.userData = { type: 'head', parentId: id }; bBody.userData = { type: 'body', parentId: id };
+                        group.add(bBody, bHead); scene.add(group); otherPlayers[id] = { group, body: bBody, head: bHead }; hitboxes.push(bBody, bHead);
                     }
                     const p = otherPlayers[id];
-                    if(data[id].isDead) { p.group.rotation.x = -Math.PI/2; p.body.material.color.set(0xff0000); p.head.material.color.set(0xff0000); }
-                    else { p.group.rotation.x = 0; p.group.position.set(data[id].x, data[id].y - 0.5, data[id].z); p.group.rotation.y = data[id].ry; p.body.material.color.set(pCol); p.head.material.color.set(pCol); }
+                    if(data[id].isDead) { 
+                        p.group.rotation.x = -Math.PI/2; 
+                        p.body.material.color.set(0xff0000); 
+                        p.head.material.color.set(0xff0000); 
+                    } else { 
+                        p.group.rotation.x = 0; 
+                        p.group.position.set(data[id].x, data[id].y - 0.5, data[id].z); 
+                        p.group.rotation.y = data[id].ry; 
+                        p.body.material.color.set(pCol); 
+                        p.head.material.color.set(pCol); 
+                    }
                 }
             });
 
             onValue(ref(db, 'users'), (snap) => {
                 const uData = snap.val(); if(!uData) return;
                 const arr = Object.keys(uData).map(k => ({name: k, kills: uData[k].kills || 0})).sort((a,b) => b.kills - a.kills);
-                document.getElementById('rank-list').innerHTML = arr.slice(0, 3).map((p, i) => `<div>${i+1}. ${toTitleCase(p.name.substring(0,10))}: ${p.kills}</div>`).join('');
+                document.getElementById('rank-list').innerHTML = arr.slice(0, 3).map((p, i) => `<div>${i+1}. ${p.name}: ${p.kills}</div>`).join('');
             });
 
             onDisconnect(playerRef).remove();
@@ -265,7 +294,7 @@
             async function disparar() {
                 if (!canShoot) return; canShoot = false;
                 sniperSound.pause(); sniperSound.currentTime = 0; sniperSound.play().catch(()=>{});
-                gun.position.z += 0.2; setTimeout(() => gun.position.z -= 0.2, 100);
+                gunGroup.position.z += 0.15; setTimeout(() => gunGroup.position.z -= 0.15, 100);
                 const raycaster = new THREE.Raycaster(); raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
                 const hits = raycaster.intersectObjects(hitboxes);
                 if (hits.length > 0) {
@@ -278,7 +307,7 @@
                         if(nHP <= 0) {
                             update(ref(db, `players/${tId}`), { isDead: true, hp: 100, lastKiller: myName });
                             kills++; update(ref(db, `users/${myName}`), { kills: kills });
-                            document.getElementById('kill-feed').innerText = `Você eliminou ${toTitleCase(tId)}`; setTimeout(() => document.getElementById('kill-feed').innerText = "", 2000);
+                            document.getElementById('kill-feed').innerText = `Você eliminou ${tId}`; setTimeout(() => document.getElementById('kill-feed').innerText = "", 2000);
                         } else update(ref(db, `players/${tId}`), { hp: nHP });
                     }
                 }
@@ -300,24 +329,11 @@
             window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
         }
 
+        const handleFS = () => { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else if (document.exitFullscreen) document.exitFullscreen(); };
+        document.getElementById('menu-fs-btn').onclick = handleFS;
+        document.getElementById('game-fs-btn').onclick = handleFS;
         document.getElementById('config-btn').onclick = () => configModal.style.display = 'block';
         document.getElementById('btn-close-config').onclick = () => configModal.style.display = 'none';
-        
-        const sSlider = document.getElementById('sens-slider');
-        const sLabel = document.getElementById('sens-label');
-        sSlider.value = sensitivity;
-        sLabel.innerText = `Sensibilidade: ${sensitivity.toFixed(1)}`;
-        sSlider.oninput = () => {
-            sensitivity = parseFloat(sSlider.value);
-            sLabel.innerText = `Sensibilidade: ${sensitivity.toFixed(1)}`;
-            localStorage.setItem('fs_sens', sensitivity);
-        };
-
-        document.getElementById('fullscreen-btn').onclick = () => {
-            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-            else if (document.exitFullscreen) document.exitFullscreen();
-        };
-
         document.getElementById('toggle-rank-btn').onclick = () => {
             rankVisible = !rankVisible;
             localStorage.setItem('fs_rank_hide', !rankVisible);
