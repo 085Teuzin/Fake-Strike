@@ -24,13 +24,15 @@
         #ui-layer { position: fixed; inset: 0; z-index: 20; pointer-events: none; display: none; }
         .interactive { pointer-events: auto; }
 
-        .config-trigger { position: absolute; top: 20px; left: 20px; width: 45px; height: 45px; background: rgba(0,0,0,0.6); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; border: 2px solid #00ff00; z-index: 1001; }
+        .top-btns { position: absolute; top: 20px; left: 20px; display: flex; gap: 10px; z-index: 1001; }
+        .ctrl-btn { width: 45px; height: 45px; background: rgba(0,0,0,0.6); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; border: 2px solid #00ff00; cursor: pointer; }
+        
         #online-count { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #00ff00; font-weight: bold; font-size: 14px; text-shadow: 2px 2px 2px #000; }
         #scoreboard { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); padding: 10px; color: white; border-radius: 8px; font-size: 13px; border-right: 4px solid #00ff00; }
 
-        #config-modal { position: fixed; inset: 10px; background: rgba(15,15,15,0.98); border-radius: 15px; border: 1px solid #00ff00; color: white; z-index: 2000; display: none; flex-direction: column; }
-        .modal-header { padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        #config-modal { position: fixed; inset: 10px; background: rgba(15,15,15,0.98); border-radius: 15px; border: 1px solid #00ff00; color: white; z-index: 2000; display: none; flex-direction: column; overflow: hidden; }
+        .modal-header { padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .modal-body { flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; touch-action: pan-y; }
         @media (max-width: 600px) { .modal-body { grid-template-columns: 1fr; } }
         
         .setting-card { background: #222; padding: 15px; border-radius: 10px; border-left: 3px solid #444; }
@@ -38,7 +40,7 @@
         .setting-row { margin-bottom: 15px; }
         .setting-row label { display: block; font-size: 12px; margin-bottom: 8px; color: #ccc; }
         
-        input[type=range] { width: 100%; accent-color: #00ff00; cursor: pointer; }
+        input[type=range] { width: 100%; accent-color: #00ff00; cursor: pointer; touch-action: none; }
         select { width: 100%; background: #333; color: white; border: 1px solid #555; padding: 8px; border-radius: 5px; }
 
         .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
@@ -61,7 +63,10 @@
         <p>🔄 gire o celular para o modo PAISAGEM</p>
     </div>
 
-    <div id="config-btn-global" class="config-trigger interactive">⚙</div>
+    <div class="top-btns">
+        <div id="config-btn-global" class="ctrl-btn interactive">⚙</div>
+        <div id="fs-btn-top" class="ctrl-btn interactive">📺</div>
+    </div>
 
     <div id="lobby">
         <h1>FAKE STRIKE</h1>
@@ -132,11 +137,10 @@
                     </select>
                 </div>
                 <div class="btn-grid">
-                    <button id="fs-btn" class="opt-btn">FULLSCREEN</button>
                     <button id="rank-btn" class="opt-btn">RANKING: ON</button>
-                </div>
-                <div class="btn-grid">
                     <button id="lobby-btn" class="opt-btn" style="display:none; border-color: #00ff00;">Back Lobby</button>
+                </div>
+                <div class="btn-grid" style="grid-template-columns: 1fr;">
                     <button id="exit-btn" class="opt-btn btn-exit">Exit Game</button>
                 </div>
             </div>
@@ -204,16 +208,23 @@
             }
         };
 
+        const handleFullscreen = () => {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
+        };
+
+        document.getElementById('fs-btn-top').onclick = handleFullscreen;
+
         document.getElementById('fov-slider').oninput = (e) => {
             fov = e.target.value;
-            document.getElementById('fov-label').innerText = `Campo de Visão (FOV): ${fov}`;
+            document.getElementById('fov-label').innerText = `FOV: ${fov}`;
             if(gameCam) { gameCam.fov = fov; gameCam.updateProjectionMatrix(); }
             localStorage.setItem('fs_fov', fov);
         };
 
         document.getElementById('sens-slider').oninput = (e) => {
             sensitivity = e.target.value;
-            document.getElementById('sens-label').innerText = `Sensibilidade: ${parseFloat(sensitivity).toFixed(1)}`;
+            document.getElementById('sens-label').innerText = `Sensi: ${parseFloat(sensitivity).toFixed(1)}`;
             localStorage.setItem('fs_sens', sensitivity);
         };
 
@@ -226,7 +237,7 @@
             const s = e.target.value;
             document.getElementById('dot').style.width = s + 'px';
             document.getElementById('dot').style.height = s + 'px';
-            document.getElementById('cross-size-label').innerText = `Tamanho da Mira: ${s}px`;
+            document.getElementById('cross-size-label').innerText = `Tamanho: ${s}px`;
             localStorage.setItem('fs_cross_size', s);
         };
 
@@ -251,10 +262,7 @@
             configModal.style.display = 'flex';
         };
         document.getElementById('close-config').onclick = () => configModal.style.display = 'none';
-        document.getElementById('fs-btn').onclick = () => {
-            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-            else document.exitFullscreen();
-        };
+        
         document.getElementById('rank-btn').onclick = () => {
             rankVisible = !rankVisible;
             localStorage.setItem('fs_rank_hide', !rankVisible);
@@ -321,13 +329,13 @@
 
             onValue(ref(db, 'players'), (snapshot) => {
                 const data = snapshot.val(); if (!data) return;
-                document.getElementById('online-count').innerText = `${Object.keys(data).length} JOGADORES ONLINE`;
+                document.getElementById('online-count').innerText = `${Object.keys(data).length} ONLINE`;
                 if (data[myName]?.isDead) {
                     deaths++; update(ref(db, `users/${myName}`), { deaths: deaths });
                     const resp = getRandomSpawn(); camera.position.set(resp.x, 1.7, resp.z);
                     update(playerRef, { isDead: false, hp: 100 });
                 }
-                document.getElementById('scoreboard').innerText = `KILLS: ${kills} | DEATHS: ${deaths}`;
+                document.getElementById('scoreboard').innerText = `Kills: ${kills} | Deaths: ${deaths}`;
                 for (let id in data) {
                     if (id === myName) continue;
                     const pCol = parseInt(data[id].color || "0xff6600");
