@@ -30,11 +30,37 @@ let myName = savedName;
 let myColor = localStorage.getItem('fs_color') || "0xff6600";
 let sensitivity = parseFloat(localStorage.getItem('fs_sens')) || 1.0;
 let fov = parseInt(localStorage.getItem('fs_fov')) || 75;
+let crossSize = localStorage.getItem('fs_cross_size') || 4;
+let crossColor = localStorage.getItem('fs_cross_color') || "#ffffff";
+let btnSize = localStorage.getItem('fs_btn_size') || 100;
+let joySize = localStorage.getItem('fs_joy_size') || 120;
 let rankVisible = localStorage.getItem('fs_rank_hide') !== "true";
 let kills = 0, deaths = 0, inGame = false, gameCam = null;
 
-const spawnPoints = [{x:-40,z:-40}, {x:40,z:-40}, {x:-40,z:40}, {x:40,z:40}];
+const spawnPoints = [{x:-80,z:-80}, {x:80,z:-80}, {x:-80,z:80}, {x:80,z:80}];
 const getRandomSpawn = () => spawnPoints[Math.floor(Math.random()*spawnPoints.length)];
+
+function applySavedUI() {
+    document.getElementById('fov-slider').value = fov;
+    document.getElementById('fov-label').innerText = `FOV: ${fov}`;
+    document.getElementById('sens-slider').value = sensitivity;
+    document.getElementById('sens-label').innerText = `Sensi: ${parseFloat(sensitivity).toFixed(1)}`;
+    document.getElementById('cross-color').value = crossColor;
+    document.getElementById('dot').style.backgroundColor = crossColor;
+    document.getElementById('cross-size-slider').value = crossSize;
+    document.getElementById('dot').style.width = crossSize + 'px';
+    document.getElementById('dot').style.height = crossSize + 'px';
+    document.getElementById('cross-size-label').innerText = `Tamanho: ${crossSize}px`;
+    document.getElementById('btn-size-slider').value = btnSize;
+    document.getElementById('shoot-btn').style.width = btnSize + 'px';
+    document.getElementById('shoot-btn').style.height = btnSize + 'px';
+    document.getElementById('btn-size-label').innerText = `Botão de Tiro: ${btnSize}px`;
+    document.getElementById('joy-size-slider').value = joySize;
+    document.getElementById('joystick-area').style.width = joySize + 'px';
+    document.getElementById('joystick-area').style.height = joySize + 'px';
+    document.getElementById('joy-size-label').innerText = `Joystick: ${joySize}px`;
+}
+applySavedUI();
 
 const lobby = document.getElementById('lobby');
 const ui = document.getElementById('ui-layer');
@@ -60,32 +86,33 @@ document.getElementById('sens-slider').oninput = (e) => {
 };
 
 document.getElementById('cross-color').onchange = (e) => {
-    document.getElementById('dot').style.backgroundColor = e.target.value;
-    localStorage.setItem('fs_cross_color', e.target.value);
+    crossColor = e.target.value;
+    document.getElementById('dot').style.backgroundColor = crossColor;
+    localStorage.setItem('fs_cross_color', crossColor);
 };
 
 document.getElementById('cross-size-slider').oninput = (e) => {
-    const s = e.target.value;
-    document.getElementById('dot').style.width = s + 'px';
-    document.getElementById('dot').style.height = s + 'px';
-    document.getElementById('cross-size-label').innerText = `Tamanho: ${s}px`;
-    localStorage.setItem('fs_cross_size', s);
+    crossSize = e.target.value;
+    document.getElementById('dot').style.width = crossSize + 'px';
+    document.getElementById('dot').style.height = crossSize + 'px';
+    document.getElementById('cross-size-label').innerText = `Tamanho: ${crossSize}px`;
+    localStorage.setItem('fs_cross_size', crossSize);
 };
 
 document.getElementById('btn-size-slider').oninput = (e) => {
-    const s = e.target.value;
+    btnSize = e.target.value;
     const btn = document.getElementById('shoot-btn');
-    btn.style.width = s + 'px'; btn.style.height = s + 'px';
-    document.getElementById('btn-size-label').innerText = `Botão de Tiro: ${s}px`;
-    localStorage.setItem('fs_btn_size', s);
+    btn.style.width = btnSize + 'px'; btn.style.height = btnSize + 'px';
+    document.getElementById('btn-size-label').innerText = `Botão de Tiro: ${btnSize}px`;
+    localStorage.setItem('fs_btn_size', btnSize);
 };
 
 document.getElementById('joy-size-slider').oninput = (e) => {
-    const s = e.target.value;
+    joySize = e.target.value;
     const joy = document.getElementById('joystick-area');
-    joy.style.width = s + 'px'; joy.style.height = s + 'px';
-    document.getElementById('joy-size-label').innerText = `Joystick: ${s}px`;
-    localStorage.setItem('fs_joy_size', s);
+    joy.style.width = joySize + 'px'; joy.style.height = joySize + 'px';
+    document.getElementById('joy-size-label').innerText = `Joystick: ${joySize}px`;
+    localStorage.setItem('fs_joy_size', joySize);
 };
 
 document.getElementById('config-btn-global').onclick = () => {
@@ -181,8 +208,8 @@ function initGame() {
             const pCol = parseInt(data[id].color || "0xff6600");
             if (!otherPlayers[id]) {
                 const group = new THREE.Group();
-                const bBody = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.4, 0.4), new THREE.MeshStandardMaterial({color: pCol}));
-                const bHead = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({color: pCol}));
+                const bBody = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.5, 0.6), new THREE.MeshStandardMaterial({color: pCol}));
+                const bHead = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), new THREE.MeshStandardMaterial({color: pCol}));
                 bHead.position.y = 1.0; bHead.userData = { type: 'head', parentId: id }; bBody.userData = { type: 'body', parentId: id };
                 group.add(bBody, bHead); scene.add(group); otherPlayers[id] = { group, body: bBody, head: bHead }; hitboxes.push(bBody, bHead);
             }
