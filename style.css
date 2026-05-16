@@ -1,4 +1,4 @@
-* { 
+{ 
     touch-action: none; 
     -webkit-tap-highlight-color: transparent; 
     user-select: none; 
@@ -12,7 +12,6 @@ body, html {
 }
 canvas { display: block; width: 100%; height: 100%; }
 
-/* 2. AVISOS E LOBBY */
 #landscape-warning { 
     position: fixed; inset: 0; background: #000; z-index: 9999; 
     display: none; flex-direction: column; align-items: center; 
@@ -35,7 +34,6 @@ canvas { display: block; width: 100%; height: 100%; }
 .char-selection { display: flex; gap: 10px; margin-bottom: 20px; }
 .credits { margin-top: 15px; font-size: 11px; color: #555; letter-spacing: 1px; }
 
-/* 3. SISTEMA DE BOTÕES (UNIFICADO) */
 .opt-btn, .char-btn, #btn-start { 
     padding: 12px; border-radius: 8px; border: 1px solid #444; 
     background: #222; color: white; font-weight: bold; cursor: pointer; transition: 0.2s;
@@ -44,7 +42,6 @@ canvas { display: block; width: 100%; height: 100%; }
 #btn-start { width: 260px; background: #00ff00; color: #000; font-size: 16px; }
 .btn-exit { background: #440000; border-color: #ff0000; width: 100%; }
 
-/* 4. CONFIGURAÇÕES (MODAL COMPACTO) */
 #config-modal { 
     position: fixed; top: 5%; bottom: 5%; left: 10%; right: 10%; 
     background: rgba(10,10,10,0.98); border-radius: 15px; 
@@ -61,7 +58,6 @@ canvas { display: block; width: 100%; height: 100%; }
 input[type=range] { width: 100%; accent-color: #00ff00; height: 5px; }
 select { width: 100%; background: #333; color: #fff; padding: 5px; border-radius: 5px; font-size: 12px; }
 
-/* 5. INTERFACE DE JOGO (HUD) */
 #ui-layer { position: fixed; inset: 0; z-index: 20; pointer-events: none; display: none; }
 .interactive { pointer-events: auto; }
 
@@ -78,7 +74,6 @@ select { width: 100%; background: #333; color: #fff; padding: 5px; border-radius
     padding: 8px; border-radius: 5px; border-right: 4px solid #00ff00; color: #fff; font-size: 11px; 
 }
 
-/* 6. MIRA E CONTROLES */
 #crosshair-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 #dot { width: 4px; height: 4px; background: #fff; border-radius: 50%; }
 #hitmarker { 
