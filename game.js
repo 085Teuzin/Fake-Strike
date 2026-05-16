@@ -15,276 +15,187 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+const state = {
+    name: localStorage.getItem('fs_name') || "",
+    pass: localStorage.getItem('fs_pass') || "",
+    color: localStorage.getItem('fs_color') || "0xff6600",
+    sens: parseFloat(localStorage.getItem('fs_sens')) || 1.0,
+    fov: parseInt(localStorage.getItem('fs_fov')) || 75,
+    crossSize: localStorage.getItem('fs_cross_size') || 4,
+    crossColor: localStorage.getItem('fs_cross_color') || "#ffffff",
+    btnSize: localStorage.getItem('fs_btn_size') || 100,
+    joySize: localStorage.getItem('fs_joy_size') || 120,
+    rank: localStorage.getItem('fs_rank_hide') !== "true",
+    kills: 0, deaths: 0, inGame: false
+};
+
+let gameCam = null;
+const spawnPoints = [{x:-80,z:-80}, {x:80,z:-80}, {x:-80,z:80}, {x:80,z:80}];
+
+const uiMap = {
+    'fov-slider': { key: 'fs_fov', label: 'fov-label', text: 'FOV: ', cb: v => { state.fov = v; if(gameCam){gameCam.fov=v; gameCam.updateProjectionMatrix();} }},
+    'sens-slider': { key: 'fs_sens', label: 'sens-label', text: 'Sensi: ', cb: v => state.sens = v },
+    'cross-size-slider': { key: 'fs_cross_size', label: 'cross-size-label', text: 'Tamanho: ', unit: 'px', cb: v => { 
+        const d = document.getElementById('dot'); d.style.width = d.style.height = v + 'px'; 
+    }},
+    'btn-size-slider': { key: 'fs_btn_size', label: 'btn-size-label', text: 'Tiro: ', unit: 'px', cb: v => {
+        const b = document.getElementById('shoot-btn'); b.style.width = b.style.height = v + 'px';
+    }},
+    'joy-size-slider': { key: 'fs_joy_size', label: 'joy-size-label', text: 'Joy: ', unit: 'px', cb: v => {
+        const j = document.getElementById('joystick-area'); j.style.width = j.style.height = v + 'px';
+    }}
+};
+
+function initUI() {
+    Object.keys(uiMap).forEach(id => {
+        const el = document.getElementById(id);
+        const cfg = uiMap[id];
+        const val = localStorage.getItem(cfg.key) || el.value;
+        
+        const update = (v) => {
+            localStorage.setItem(cfg.key, v);
+            document.getElementById(cfg.label).innerText = `${cfg.text}${v}${cfg.unit || ''}`;
+            cfg.cb(v);
+        };
+
+        el.value = val;
+        update(val);
+        el.oninput = (e) => update(e.target.value);
+    });
+
+    document.getElementById('cross-color').onchange = (e) => {
+        state.crossColor = e.target.value;
+        document.getElementById('dot').style.backgroundColor = state.crossColor;
+        localStorage.setItem('fs_cross_color', state.crossColor);
+    };
+}
+initUI();
+
 const nameInput = document.getElementById('player-name');
 const passInput = document.getElementById('player-pass');
-let savedName = localStorage.getItem('fs_name') || "";
-let savedPass = localStorage.getItem('fs_pass') || "";
-
-if (savedName) {
-    nameInput.value = savedName;
-    nameInput.readOnly = true;
-    passInput.value = savedPass;
-}
-
-let myName = savedName;
-let myColor = localStorage.getItem('fs_color') || "0xff6600";
-let sensitivity = parseFloat(localStorage.getItem('fs_sens')) || 1.0;
-let fov = parseInt(localStorage.getItem('fs_fov')) || 75;
-let crossSize = localStorage.getItem('fs_cross_size') || 4;
-let crossColor = localStorage.getItem('fs_cross_color') || "#ffffff";
-let btnSize = localStorage.getItem('fs_btn_size') || 100;
-let joySize = localStorage.getItem('fs_joy_size') || 120;
-let rankVisible = localStorage.getItem('fs_rank_hide') !== "true";
-let kills = 0, deaths = 0, inGame = false, gameCam = null;
-
-const spawnPoints = [{x:-80,z:-80}, {x:80,z:-80}, {x:-80,z:80}, {x:80,z:80}];
-const getRandomSpawn = () => spawnPoints[Math.floor(Math.random()*spawnPoints.length)];
-
-function applySavedUI() {
-    document.getElementById('fov-slider').value = fov;
-    document.getElementById('fov-label').innerText = `FOV: ${fov}`;
-    document.getElementById('sens-slider').value = sensitivity;
-    document.getElementById('sens-label').innerText = `Sensi: ${parseFloat(sensitivity).toFixed(1)}`;
-    document.getElementById('cross-color').value = crossColor;
-    document.getElementById('dot').style.backgroundColor = crossColor;
-    document.getElementById('cross-size-slider').value = crossSize;
-    document.getElementById('dot').style.width = crossSize + 'px';
-    document.getElementById('dot').style.height = crossSize + 'px';
-    document.getElementById('cross-size-label').innerText = `Tamanho: ${crossSize}px`;
-    document.getElementById('btn-size-slider').value = btnSize;
-    document.getElementById('shoot-btn').style.width = btnSize + 'px';
-    document.getElementById('shoot-btn').style.height = btnSize + 'px';
-    document.getElementById('btn-size-label').innerText = `Botão de Tiro: ${btnSize}px`;
-    document.getElementById('joy-size-slider').value = joySize;
-    document.getElementById('joystick-area').style.width = joySize + 'px';
-    document.getElementById('joystick-area').style.height = joySize + 'px';
-    document.getElementById('joy-size-label').innerText = `Joystick: ${joySize}px`;
-}
-applySavedUI();
-
-const lobby = document.getElementById('lobby');
-const ui = document.getElementById('ui-layer');
-const configModal = document.getElementById('config-modal');
-const lobbyBtn = document.getElementById('lobby-btn');
-
-document.getElementById('fs-btn-top').onclick = () => {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-    else document.exitFullscreen();
-};
-
-document.getElementById('fov-slider').oninput = (e) => {
-    fov = e.target.value;
-    document.getElementById('fov-label').innerText = `FOV: ${fov}`;
-    if(gameCam) { gameCam.fov = fov; gameCam.updateProjectionMatrix(); }
-    localStorage.setItem('fs_fov', fov);
-};
-
-document.getElementById('sens-slider').oninput = (e) => {
-    sensitivity = e.target.value;
-    document.getElementById('sens-label').innerText = `Sensi: ${parseFloat(sensitivity).toFixed(1)}`;
-    localStorage.setItem('fs_sens', sensitivity);
-};
-
-document.getElementById('cross-color').onchange = (e) => {
-    crossColor = e.target.value;
-    document.getElementById('dot').style.backgroundColor = crossColor;
-    localStorage.setItem('fs_cross_color', crossColor);
-};
-
-document.getElementById('cross-size-slider').oninput = (e) => {
-    crossSize = e.target.value;
-    document.getElementById('dot').style.width = crossSize + 'px';
-    document.getElementById('dot').style.height = crossSize + 'px';
-    document.getElementById('cross-size-label').innerText = `Tamanho: ${crossSize}px`;
-    localStorage.setItem('fs_cross_size', crossSize);
-};
-
-document.getElementById('btn-size-slider').oninput = (e) => {
-    btnSize = e.target.value;
-    const btn = document.getElementById('shoot-btn');
-    btn.style.width = btnSize + 'px'; btn.style.height = btnSize + 'px';
-    document.getElementById('btn-size-label').innerText = `Botão de Tiro: ${btnSize}px`;
-    localStorage.setItem('fs_btn_size', btnSize);
-};
-
-document.getElementById('joy-size-slider').oninput = (e) => {
-    joySize = e.target.value;
-    const joy = document.getElementById('joystick-area');
-    joy.style.width = joySize + 'px'; joy.style.height = joySize + 'px';
-    document.getElementById('joy-size-label').innerText = `Joystick: ${joySize}px`;
-    localStorage.setItem('fs_joy_size', joySize);
-};
-
-document.getElementById('config-btn-global').onclick = () => {
-    lobbyBtn.style.display = inGame ? "block" : "none";
-    configModal.style.display = 'flex';
-};
-document.getElementById('close-config').onclick = () => configModal.style.display = 'none';
-
-document.getElementById('rank-btn').onclick = () => {
-    rankVisible = !rankVisible;
-    localStorage.setItem('fs_rank_hide', !rankVisible);
-    document.getElementById('rank-btn').innerText = rankVisible ? "RANKING: ON" : "RANKING: OFF";
-};
-document.getElementById('lobby-btn').onclick = () => location.reload();
-document.getElementById('exit-btn').onclick = () => { if(confirm("Sair do jogo?")) window.close(); };
-
-document.querySelectorAll('.char-btn').forEach(btn => {
-    if(btn.dataset.color === myColor) btn.classList.add('selected');
-    btn.onclick = () => {
-        document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        myColor = btn.dataset.color;
-        localStorage.setItem('fs_color', myColor);
-    };
-});
+if (state.name) { nameInput.value = state.name; nameInput.readOnly = true; passInput.value = state.pass; }
 
 document.getElementById('btn-start').onclick = async () => {
-    const user = nameInput.value.trim();
-    const pass = passInput.value.trim();
+    const user = nameInput.value.trim(), pass = passInput.value.trim();
     if(user.length < 3) return;
     const snap = await get(ref(db, `users/${user}`));
     const data = snap.val();
+    
     if(data && data.pass !== pass) {
-        document.getElementById('login-error').innerText = "Senha Incorreta!";
-        document.getElementById('login-error').style.display = 'block';
+        const err = document.getElementById('login-error');
+        err.innerText = "Senha Incorreta!"; err.style.display = 'block';
         return;
     }
-    if(!data) await set(ref(db, `users/${user}`), { pass: pass, kills: 0, deaths: 0 });
-    localStorage.setItem('fs_name', user);
-    localStorage.setItem('fs_pass', pass);
-    myName = user; kills = data?.kills || 0; deaths = data?.deaths || 0;
-    lobby.style.display = 'none'; ui.style.display = 'block'; inGame = true;
+    
+    if(!data) await set(ref(db, `users/${user}`), { pass, kills: 0, deaths: 0 });
+    
+    localStorage.setItem('fs_name', user); localStorage.setItem('fs_pass', pass);
+    state.name = user; state.kills = data?.kills || 0; state.deaths = data?.deaths || 0;
+    
+    document.getElementById('lobby').style.display = 'none';
+    document.getElementById('ui-layer').style.display = 'block';
+    state.inGame = true;
     initGame();
 };
 
 function initGame() {
-    const playerRef = ref(db, `players/${myName}`);
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87CEEB);
-    const camera = new THREE.PerspectiveCamera(fov, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const playerRef = ref(db, `players/${state.name}`);
+    const scene = new THREE.Scene(); scene.background = new THREE.Color(0x87CEEB);
+    const camera = new THREE.PerspectiveCamera(state.fov, window.innerWidth/window.innerHeight, 0.1, 1000);
     gameCam = camera;
+    
     const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('game-canvas'), antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
 
-    const startSpawn = getRandomSpawn();
-    camera.position.set(startSpawn.x, 1.7, startSpawn.z);
+    const sp = spawnPoints[Math.floor(Math.random()*spawnPoints.length)];
+    camera.position.set(sp.x, 1.7, sp.z);
 
-    const textureLoader = new THREE.TextureLoader();
-    const floorTex = textureLoader.load('chao.jpg');
-    floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
-    floorTex.repeat.set(50, 50);
-    const floorMat = new THREE.MeshStandardMaterial({ map: floorTex });
-    const floorGeo = new THREE.PlaneGeometry(200, 200);
-    const floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.rotateX(-Math.PI/2);
-    scene.add(floor);
-    scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x444444 }));
+    floor.rotation.x = -Math.PI/2;
+    scene.add(floor, new THREE.AmbientLight(0xffffff, 1.2));
     
-    const gunGroup = new THREE.Group();
-    const gBody = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.18, 0.4), new THREE.MeshStandardMaterial({color: 0x222222}));
-    const gBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5), new THREE.MeshStandardMaterial({color: 0x111111}));
-    gBarrel.rotation.x = Math.PI/2; gBarrel.position.z = -0.35;
-    const gHandle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, 0.1), new THREE.MeshStandardMaterial({color: 0x111111}));
-    gHandle.position.set(0, -0.15, 0);
-    gunGroup.add(gBody, gBarrel, gHandle); gunGroup.position.set(0.35, -0.4, -0.7);
-    camera.add(gunGroup); scene.add(camera);
+    const gun = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.4), new THREE.MeshStandardMaterial({color: 0x222222}));
+    gun.position.set(0.3, -0.3, -0.6);
+    camera.add(gun); scene.add(camera);
 
-    const otherPlayers = {}, hitboxes = [];
-    const sniperSound = new Audio('sniper.mp3'), hitSound = new Audio('hit.mp3');
+    const otherPlayers = {}, hitboxes = [], sniperSnd = new Audio('sniper.mp3'), hitSnd = new Audio('hit.mp3');
 
-    onValue(ref(db, 'players'), (snapshot) => {
-        const data = snapshot.val(); if (!data) return;
-        document.getElementById('online-count').innerText = `${Object.keys(data).length} ONLINE`;
-        if (data[myName]?.isDead) {
-            deaths++; update(ref(db, `users/${myName}`), { deaths: deaths });
-            const resp = getRandomSpawn(); camera.position.set(resp.x, 1.7, resp.z);
+    onValue(ref(db, 'players'), (snap) => {
+        const data = snap.val(); if (!data) return;
+        
+        if (data[state.name]?.isDead) {
+            state.deaths++; update(ref(db, `users/${state.name}`), { deaths: state.deaths });
+            const r = spawnPoints[Math.floor(Math.random()*4)]; camera.position.set(r.x, 1.7, r.z);
             update(playerRef, { isDead: false, hp: 100 });
         }
-        document.getElementById('scoreboard').innerText = `Kills: ${kills} | Deaths: ${deaths}`;
+
+        document.getElementById('scoreboard').innerText = `Kills: ${state.kills} | Deaths: ${state.deaths}`;
+        
         for (let id in data) {
-            if (id === myName) continue;
-            const pCol = parseInt(data[id].color || "0xff6600");
+            if (id === state.name) continue;
             if (!otherPlayers[id]) {
-                const group = new THREE.Group();
-                const bBody = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.5, 0.6), new THREE.MeshStandardMaterial({color: pCol}));
-                const bHead = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), new THREE.MeshStandardMaterial({color: pCol}));
-                bHead.position.y = 1.0; bHead.userData = { type: 'head', parentId: id }; bBody.userData = { type: 'body', parentId: id };
-                group.add(bBody, bHead); scene.add(group); otherPlayers[id] = { group, body: bBody, head: bHead }; hitboxes.push(bBody, bHead);
+                const p = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), new THREE.MeshStandardMaterial({color: parseInt(data[id].color)}));
+                p.userData = { id }; scene.add(p); otherPlayers[id] = p; hitboxes.push(p);
             }
-            const p = otherPlayers[id];
-            if(data[id].isDead) { p.group.rotation.x = -Math.PI/2; p.body.material.color.set(0xff0000); p.head.material.color.set(0xff0000); }
-            else { p.group.rotation.x = 0; p.group.position.set(data[id].x, data[id].y-0.5, data[id].z); p.group.rotation.y = data[id].ry; p.body.material.color.set(pCol); p.head.material.color.set(pCol); }
+            otherPlayers[id].position.set(data[id].x, data[id].y, data[id].z);
+            otherPlayers[id].rotation.y = data[id].ry;
         }
     });
 
     onDisconnect(playerRef).remove();
-    let canShoot = true, joystickId = null, lookId = null, moveFwd = 0, moveSide = 0, lookYaw = 0, lookPitch = 0, lastX, lastY;
 
-    window.addEventListener('touchstart', (e) => {
-        if(configModal.style.display === 'flex') return;
+    let moveFwd = 0, moveSide = 0, lookYaw = 0, lookPitch = 0, joystickId = null, lookId = null, lastX, lastY;
+
+    window.ontouchstart = (e) => {
+        if(document.getElementById('config-modal').style.display === 'flex') return;
         for (let t of e.changedTouches) {
-            if (t.target === document.getElementById('shoot-btn')) disparar();
+            if (t.target.id === 'shoot-btn') disparar();
             else if (t.clientX < window.innerWidth/2) joystickId = t.identifier;
             else { lookId = t.identifier; lastX = t.clientX; lastY = t.clientY; }
         }
-    });
+    };
 
-    window.addEventListener('touchmove', (e) => {
+    window.ontouchmove = (e) => {
         for (let t of e.changedTouches) {
             if (t.identifier === joystickId) {
                 const rect = document.getElementById('joystick-area').getBoundingClientRect();
                 const dx = t.clientX - (rect.left + rect.width/2), dy = t.clientY - (rect.top + rect.height/2);
-                const dist = Math.min(Math.sqrt(dx*dx + dy*dy), rect.width/2); const ang = Math.atan2(dy, dx);
-                document.getElementById('joystick-knob').style.transform = `translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist}px)`;
+                const ang = Math.atan2(dy, dx), dist = Math.min(Math.sqrt(dx*dx+dy*dy), rect.width/2);
                 moveFwd = -Math.sin(ang) * (dist/(rect.width/2)); moveSide = Math.cos(ang) * (dist/(rect.width/2));
             }
             if (t.identifier === lookId) {
-                lookYaw -= (t.clientX - lastX) * (0.005 * sensitivity);
-                lookPitch = Math.max(-1.4, Math.min(1.4, lookPitch - (t.clientY - lastY) * (0.005 * sensitivity)));
+                lookYaw -= (t.clientX - lastX) * (0.005 * state.sens);
+                lookPitch = Math.max(-1.4, Math.min(1.4, lookPitch - (t.clientY - lastY) * (0.005 * state.sens)));
                 lastX = t.clientX; lastY = t.clientY;
             }
         }
-    });
-
-    window.addEventListener('touchend', (e) => {
-        for (let t of e.changedTouches) {
-            if (t.identifier === joystickId) { joystickId = null; moveFwd = 0; moveSide = 0; document.getElementById('joystick-knob').style.transform = ''; }
-            if (t.identifier === lookId) lookId = null;
-        }
-    });
+    };
 
     async function disparar() {
-        if (!canShoot) return; canShoot = false;
-        sniperSound.pause(); sniperSound.currentTime = 0; sniperSound.play().catch(()=>{});
-        gunGroup.position.z += 0.15; setTimeout(() => gunGroup.position.z -= 0.15, 100);
-        const raycaster = new THREE.Raycaster(); raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
-        const hits = raycaster.intersectObjects(hitboxes);
+        sniperSnd.play().catch(()=>{});
+        const ray = new THREE.Raycaster(); ray.setFromCamera({x:0, y:0}, camera);
+        const hits = ray.intersectObjects(hitboxes);
         if (hits.length > 0) {
-            const hit = hits[0].object; const tId = hit.userData.parentId;
-            const snap = await get(ref(db, `players/${tId}`)); const pD = snap.val();
+            const tId = hits[0].object.userData.id;
+            const pD = (await get(ref(db, `players/${tId}`))).val();
             if(pD && !pD.isDead) {
-                hitSound.pause(); hitSound.currentTime = 0; hitSound.play().catch(()=>{});
-                document.getElementById('hitmarker').style.display = 'block'; setTimeout(() => document.getElementById('hitmarker').style.display = 'none', 150);
-                let nHP = (pD.hp || 100) - (hit.userData.type === 'head' ? 100 : 34);
+                hitSnd.play().catch(()=>{});
+                let nHP = (pD.hp || 100) - 34;
                 if(nHP <= 0) {
-                    update(ref(db, `players/${tId}`), { isDead: true, hp: 100, lastKiller: myName });
-                    kills++; update(ref(db, `users/${myName}`), { kills: kills });
+                    update(ref(db, `players/${tId}`), { isDead: true, hp: 100 });
+                    state.kills++; update(ref(db, `users/${state.name}`), { kills: state.kills });
                 } else update(ref(db, `players/${tId}`), { hp: nHP });
             }
         }
-        setTimeout(() => { canShoot = true; }, 800);
     }
 
     function animate() {
         requestAnimationFrame(animate);
-        camera.rotation.order = 'YXZ'; camera.rotation.y = lookYaw; camera.rotation.x = lookPitch;
-        const dir = new THREE.Vector3(moveSide, 0, -moveFwd).applyQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), lookYaw));
-        camera.position.addScaledVector(dir, 0.12); camera.position.y = 1.7;
-        set(playerRef, { x: camera.position.x, y: camera.position.y, z: camera.position.z, ry: camera.rotation.y, isDead: false, hp: 100, color: myColor });
+        camera.rotation.set(lookPitch, lookYaw, 0, 'YXZ');
+        const dir = new THREE.Vector3(moveSide, 0, -moveFwd).applyQuaternion(camera.quaternion);
+        camera.position.x += dir.x * 0.15; camera.position.z += dir.z * 0.15;
+        update(playerRef, { x: camera.position.x, y: camera.position.y, z: camera.position.z, ry: camera.rotation.y, color: state.color });
         renderer.render(scene, camera);
     }
     animate();
-    window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
 }
