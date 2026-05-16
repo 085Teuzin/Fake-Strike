@@ -4,64 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Operation: Fake Strike</title>
-    <style>
-        * { touch-action: none; -webkit-tap-highlight-color: transparent; user-select: none; outline: none; box-sizing: border-box; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', Roboto, sans-serif; }
-        canvas { display: block; width: 100%; height: 100%; }
-        
-        #landscape-warning { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; }
-        @media screen and (orientation: portrait) { #landscape-warning { display: flex; } }
-
-        #lobby { position: fixed; inset: 0; background: #111; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; padding: 20px; }
-        #lobby h1 { margin-bottom: 20px; letter-spacing: 5px; font-weight: 900; color: #00ff00; }
-        #lobby input { padding: 15px; font-size: 16px; border-radius: 8px; border: 1px solid #444; margin-bottom: 10px; text-align: center; background: #222; color: #fff; width: 280px; }
-        
-        /* Estilo para input bloqueado */
-        #lobby input:read-only { opacity: 0.6; cursor: not-allowed; border-color: #00ff00; }
-
-        .char-selection { display: flex; gap: 10px; margin-bottom: 25px; }
-        .char-btn { padding: 12px; border: 2px solid #444; border-radius: 8px; background: #222; color: white; font-size: 11px; cursor: pointer; text-align: center; width: 135px; }
-        .char-btn.selected { border-color: #00ff00; background: #113311; }
-        #btn-start { padding: 15px 50px; background: #00ff00; border: none; border-radius: 8px; font-weight: bold; color: #000; cursor: pointer; width: 280px; font-size: 16px; }
-
-        #ui-layer { position: fixed; inset: 0; z-index: 20; pointer-events: none; display: none; }
-        .interactive { pointer-events: auto; }
-
-        .top-btns { position: absolute; top: 20px; left: 20px; display: flex; gap: 10px; z-index: 1001; }
-        .ctrl-btn { width: 45px; height: 45px; background: rgba(0,0,0,0.6); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; border: 2px solid #00ff00; cursor: pointer; }
-        
-        #online-count { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #00ff00; font-weight: bold; font-size: 14px; text-shadow: 2px 2px 2px #000; }
-        #scoreboard { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); padding: 10px; color: white; border-radius: 8px; font-size: 13px; border-right: 4px solid #00ff00; }
-
-        #config-modal { position: fixed; inset: 10px; background: rgba(15,15,15,0.98); border-radius: 15px; border: 1px solid #00ff00; color: white; z-index: 2000; display: none; flex-direction: column; overflow: hidden; }
-        .modal-header { padding: 15px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-        .modal-body { flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; touch-action: pan-y; }
-        @media (max-width: 600px) { .modal-body { grid-template-columns: 1fr; } }
-        
-        .setting-card { background: #222; padding: 15px; border-radius: 10px; border-left: 3px solid #444; }
-        .setting-card h3 { margin: 0 0 10px 0; font-size: 14px; color: #00ff00; text-transform: uppercase; }
-        .setting-row { margin-bottom: 15px; }
-        .setting-row label { display: block; font-size: 12px; margin-bottom: 8px; color: #ccc; }
-        
-        input[type=range] { width: 100%; accent-color: #00ff00; cursor: pointer; touch-action: none; }
-        select { width: 100%; background: #333; color: white; border: 1px solid #555; padding: 8px; border-radius: 5px; }
-
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .opt-btn { background: #333; border: 1px solid #555; padding: 12px; color: white; border-radius: 8px; font-size: 11px; cursor: pointer; font-weight: bold; }
-        .btn-confirm { background: #00ff00; color: #000; border: none; font-size: 14px; }
-        .btn-exit { background: #660000; color: #fff; border: none; }
-
-        #crosshair-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
-        #dot { width: 4px; height: 4px; background: #fff; border-radius: 50%; transition: all 0.1s; }
-        #hitmarker { position: absolute; top: 50%; left: 50%; width: 30px; height: 30px; border: 2px solid red; transform: translate(-50%, -50%) rotate(45deg); display: none; }
-        
-        #joystick-area { position: absolute; bottom: 40px; left: 40px; width: 120px; height: 120px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); }
-        #joystick-knob { width: 50px; height: 50px; background: #fff; border-radius: 50%; opacity: 0.3; }
-        #shoot-btn { position: absolute; bottom: 40px; right: 40px; width: 100px; height: 100px; background: rgba(0,255,0,0.1); border: 3px solid rgba(0,255,0,0.3); border-radius: 50%; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 18px; text-shadow: 1px 1px 2px #000; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div id="landscape-warning">
         <p>🔄 gire o celular para o modo PAISAGEM</p>
     </div>
@@ -100,7 +45,6 @@
                     <input type="range" id="sens-slider" min="0.1" max="4.0" step="0.1" value="1.0">
                 </div>
             </div>
-
             <div class="setting-card">
                 <h3>Personalização Mira</h3>
                 <div class="setting-row">
@@ -117,7 +61,6 @@
                     <input type="range" id="cross-size-slider" min="2" max="12" step="1" value="4">
                 </div>
             </div>
-
             <div class="setting-card">
                 <h3>Controles</h3>
                 <div class="setting-row">
@@ -129,7 +72,6 @@
                     <input type="range" id="joy-size-slider" min="80" max="180" step="5" value="120">
                 </div>
             </div>
-
             <div class="setting-card">
                 <h3>Sistema</h3>
                 <div class="setting-row">
@@ -170,285 +112,6 @@
             "firebase/database": "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"
         } }
     </script>
-
-    <script type="module">
-        import * as THREE from 'three';
-        import { initializeApp } from "firebase/app";
-        import { getDatabase, ref, set, onValue, onDisconnect, update, get } from "firebase/database";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBqRAsWfP4w-r82PZOaJcDck7W8Aeph3p8",
-            authDomain: "teuzin-games.firebaseapp.com",
-            databaseURL: "https://teuzin-games-default-rtdb.firebaseio.com",
-            projectId: "teuzin-games",
-            storageBucket: "teuzin-games.firebasestorage.app",
-            messagingSenderId: "548192563345",
-            appId: "1:548192563345:web:e729e39f9f266aa6a68f30"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        const nameInput = document.getElementById('player-name');
-        const passInput = document.getElementById('player-pass');
-        
-        let savedName = localStorage.getItem('fs_name') || "";
-        let savedPass = localStorage.getItem('fs_pass') || "";
-
-        if (savedName) {
-            nameInput.value = savedName;
-            nameInput.readOnly = true;
-            passInput.value = savedPass;
-        }
-
-        let myName = savedName;
-        let myColor = localStorage.getItem('fs_color') || "0xff6600";
-        let sensitivity = parseFloat(localStorage.getItem('fs_sens')) || 1.0;
-        let fov = parseInt(localStorage.getItem('fs_fov')) || 75;
-        let rankVisible = localStorage.getItem('fs_rank_hide') !== "true";
-        let kills = 0, deaths = 0, inGame = false, gameCam = null;
-
-        const spawnPoints = [{x:-40,z:-40}, {x:40,z:-40}, {x:-40,z:40}, {x:40,z:40}];
-        const getRandomSpawn = () => spawnPoints[Math.floor(Math.random()*spawnPoints.length)];
-
-        const lobby = document.getElementById('lobby');
-        const ui = document.getElementById('ui-layer');
-        const configModal = document.getElementById('config-modal');
-        const lobbyBtn = document.getElementById('lobby-btn');
-
-        const tryLockLandscape = () => {
-            if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(() => {});
-            }
-        };
-
-        const handleFullscreen = () => {
-            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-            else document.exitFullscreen();
-        };
-
-        document.getElementById('fs-btn-top').onclick = handleFullscreen;
-
-        document.getElementById('fov-slider').oninput = (e) => {
-            fov = e.target.value;
-            document.getElementById('fov-label').innerText = `FOV: ${fov}`;
-            if(gameCam) { gameCam.fov = fov; gameCam.updateProjectionMatrix(); }
-            localStorage.setItem('fs_fov', fov);
-        };
-
-        document.getElementById('sens-slider').oninput = (e) => {
-            sensitivity = e.target.value;
-            document.getElementById('sens-label').innerText = `Sensi: ${parseFloat(sensitivity).toFixed(1)}`;
-            localStorage.setItem('fs_sens', sensitivity);
-        };
-
-        document.getElementById('cross-color').onchange = (e) => {
-            document.getElementById('dot').style.backgroundColor = e.target.value;
-            localStorage.setItem('fs_cross_color', e.target.value);
-        };
-
-        document.getElementById('cross-size-slider').oninput = (e) => {
-            const s = e.target.value;
-            document.getElementById('dot').style.width = s + 'px';
-            document.getElementById('dot').style.height = s + 'px';
-            document.getElementById('cross-size-label').innerText = `Tamanho: ${s}px`;
-            localStorage.setItem('fs_cross_size', s);
-        };
-
-        document.getElementById('btn-size-slider').oninput = (e) => {
-            const s = e.target.value;
-            const btn = document.getElementById('shoot-btn');
-            btn.style.width = s + 'px'; btn.style.height = s + 'px';
-            document.getElementById('btn-size-label').innerText = `Botão de Tiro: ${s}px`;
-            localStorage.setItem('fs_btn_size', s);
-        };
-
-        document.getElementById('joy-size-slider').oninput = (e) => {
-            const s = e.target.value;
-            const joy = document.getElementById('joystick-area');
-            joy.style.width = s + 'px'; joy.style.height = s + 'px';
-            document.getElementById('joy-size-label').innerText = `Joystick: ${s}px`;
-            localStorage.setItem('fs_joy_size', s);
-        };
-
-        document.getElementById('config-btn-global').onclick = () => {
-            lobbyBtn.style.display = inGame ? "block" : "none";
-            configModal.style.display = 'flex';
-        };
-        document.getElementById('close-config').onclick = () => configModal.style.display = 'none';
-        
-        document.getElementById('rank-btn').onclick = () => {
-            rankVisible = !rankVisible;
-            localStorage.setItem('fs_rank_hide', !rankVisible);
-            document.getElementById('rank-btn').innerText = rankVisible ? "RANKING: ON" : "RANKING: OFF";
-        };
-        document.getElementById('lobby-btn').onclick = () => location.reload();
-        document.getElementById('exit-btn').onclick = () => { if(confirm("Sair do jogo?")) window.close(); };
-
-        document.querySelectorAll('.char-btn').forEach(btn => {
-            if(btn.dataset.color === myColor) btn.classList.add('selected');
-            btn.onclick = () => {
-                document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                myColor = btn.dataset.color;
-                localStorage.setItem('fs_color', myColor);
-            };
-        });
-
-        document.getElementById('btn-start').onclick = async () => {
-            const user = nameInput.value.trim();
-            const pass = passInput.value.trim();
-            if(user.length < 3) return;
-            tryLockLandscape();
-            const snap = await get(ref(db, `users/${user}`));
-            const data = snap.val();
-            if(data && data.pass !== pass) {
-                document.getElementById('login-error').innerText = "Senha Incorreta!";
-                document.getElementById('login-error').style.display = 'block';
-                return;
-            }
-            if(!data) await set(ref(db, `users/${user}`), { pass: pass, kills: 0, deaths: 0 });
-            
-            localStorage.setItem('fs_name', user);
-            localStorage.setItem('fs_pass', pass);
-            
-            myName = user; kills = data?.kills || 0; deaths = data?.deaths || 0;
-            lobby.style.display = 'none'; ui.style.display = 'block'; inGame = true;
-            initGame();
-        };
-
-        function initGame() {
-            const playerRef = ref(db, `players/${myName}`);
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x87CEEB);
-            const camera = new THREE.PerspectiveCamera(fov, window.innerWidth/window.innerHeight, 0.1, 1000);
-            gameCam = camera;
-            const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('game-canvas'), antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-
-            const startSpawn = getRandomSpawn();
-            camera.position.set(startSpawn.x, 1.7, startSpawn.z);
-
-            const textureLoader = new THREE.TextureLoader();
-            const floorTex = textureLoader.load('chao.jpg');
-            floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
-            floorTex.repeat.set(50, 50);
-            
-            const floorMat = new THREE.MeshStandardMaterial({ map: floorTex });
-            const floorGeo = new THREE.PlaneGeometry(200, 200);
-            const floor = new THREE.Mesh(floorGeo, floorMat);
-            floor.rotateX(-Math.PI/2);
-            scene.add(floor);
-
-            scene.add(new THREE.AmbientLight(0xffffff, 1.2));
-            
-            const gunGroup = new THREE.Group();
-            const gBody = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.18, 0.4), new THREE.MeshStandardMaterial({color: 0x222222}));
-            const gBarrel = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5), new THREE.MeshStandardMaterial({color: 0x111111}));
-            gBarrel.rotation.x = Math.PI/2; gBarrel.position.z = -0.35;
-            const gHandle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, 0.1), new THREE.MeshStandardMaterial({color: 0x111111}));
-            gHandle.position.set(0, -0.15, 0);
-            gunGroup.add(gBody, gBarrel, gHandle); gunGroup.position.set(0.35, -0.4, -0.7);
-            camera.add(gunGroup); scene.add(camera);
-
-            const otherPlayers = {}, hitboxes = [];
-            const sniperSound = new Audio('sniper.mp3'), hitSound = new Audio('hit.mp3');
-
-            onValue(ref(db, 'players'), (snapshot) => {
-                const data = snapshot.val(); if (!data) return;
-                document.getElementById('online-count').innerText = `${Object.keys(data).length} ONLINE`;
-                if (data[myName]?.isDead) {
-                    deaths++; update(ref(db, `users/${myName}`), { deaths: deaths });
-                    const resp = getRandomSpawn(); camera.position.set(resp.x, 1.7, resp.z);
-                    update(playerRef, { isDead: false, hp: 100 });
-                }
-                document.getElementById('scoreboard').innerText = `Kills: ${kills} | Deaths: ${deaths}`;
-                for (let id in data) {
-                    if (id === myName) continue;
-                    const pCol = parseInt(data[id].color || "0xff6600");
-                    if (!otherPlayers[id]) {
-                        const group = new THREE.Group();
-                        const bBody = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.4, 0.4), new THREE.MeshStandardMaterial({color: pCol}));
-                        const bHead = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({color: pCol}));
-                        bHead.position.y = 1.0; bHead.userData = { type: 'head', parentId: id }; bBody.userData = { type: 'body', parentId: id };
-                        group.add(bBody, bHead); scene.add(group); otherPlayers[id] = { group, body: bBody, head: bHead }; hitboxes.push(bBody, bHead);
-                    }
-                    const p = otherPlayers[id];
-                    if(data[id].isDead) { p.group.rotation.x = -Math.PI/2; p.body.material.color.set(0xff0000); p.head.material.color.set(0xff0000); }
-                    else { p.group.rotation.x = 0; p.group.position.set(data[id].x, data[id].y-0.5, data[id].z); p.group.rotation.y = data[id].ry; p.body.material.color.set(pCol); p.head.material.color.set(pCol); }
-                }
-            });
-
-            onDisconnect(playerRef).remove();
-
-            let canShoot = true, joystickId = null, lookId = null, moveFwd = 0, moveSide = 0, lookYaw = 0, lookPitch = 0, lastX, lastY;
-            window.addEventListener('touchstart', (e) => {
-                if(configModal.style.display === 'flex') return;
-                for (let t of e.changedTouches) {
-                    if (t.target === document.getElementById('shoot-btn')) disparar();
-                    else if (t.clientX < window.innerWidth/2) joystickId = t.identifier;
-                    else { lookId = t.identifier; lastX = t.clientX; lastY = t.clientY; }
-                }
-            });
-
-            window.addEventListener('touchmove', (e) => {
-                for (let t of e.changedTouches) {
-                    if (t.identifier === joystickId) {
-                        const rect = document.getElementById('joystick-area').getBoundingClientRect();
-                        const dx = t.clientX - (rect.left + rect.width/2), dy = t.clientY - (rect.top + rect.height/2);
-                        const dist = Math.min(Math.sqrt(dx*dx + dy*dy), rect.width/2); const ang = Math.atan2(dy, dx);
-                        document.getElementById('joystick-knob').style.transform = `translate(${Math.cos(ang)*dist}px, ${Math.sin(ang)*dist}px)`;
-                        moveFwd = -Math.sin(ang) * (dist/(rect.width/2)); moveSide = Math.cos(ang) * (dist/(rect.width/2));
-                    }
-                    if (t.identifier === lookId) {
-                        lookYaw -= (t.clientX - lastX) * (0.005 * sensitivity);
-                        lookPitch = Math.max(-1.4, Math.min(1.4, lookPitch - (t.clientY - lastY) * (0.005 * sensitivity)));
-                        lastX = t.clientX; lastY = t.clientY;
-                    }
-                }
-            });
-
-            window.addEventListener('touchend', (e) => {
-                for (let t of e.changedTouches) {
-                    if (t.identifier === joystickId) { joystickId = null; moveFwd = 0; moveSide = 0; document.getElementById('joystick-knob').style.transform = ''; }
-                    if (t.identifier === lookId) lookId = null;
-                }
-            });
-
-            async function disparar() {
-                if (!canShoot) return; canShoot = false;
-                sniperSound.pause(); sniperSound.currentTime = 0; sniperSound.play().catch(()=>{});
-                gunGroup.position.z += 0.15; setTimeout(() => gunGroup.position.z -= 0.15, 100);
-                const raycaster = new THREE.Raycaster(); raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
-                const hits = raycaster.intersectObjects(hitboxes);
-                if (hits.length > 0) {
-                    const hit = hits[0].object; const tId = hit.userData.parentId;
-                    const snap = await get(ref(db, `players/${tId}`)); const pD = snap.val();
-                    if(pD && !pD.isDead) {
-                        hitSound.pause(); hitSound.currentTime = 0; hitSound.play().catch(()=>{});
-                        document.getElementById('hitmarker').style.display = 'block'; setTimeout(() => document.getElementById('hitmarker').style.display = 'none', 150);
-                        let nHP = (pD.hp || 100) - (hit.userData.type === 'head' ? 100 : 34);
-                        if(nHP <= 0) {
-                            update(ref(db, `players/${tId}`), { isDead: true, hp: 100, lastKiller: myName });
-                            kills++; update(ref(db, `users/${myName}`), { kills: kills });
-                        } else update(ref(db, `players/${tId}`), { hp: nHP });
-                    }
-                }
-                setTimeout(() => { canShoot = true; }, 800);
-            }
-
-            function animate() {
-                requestAnimationFrame(animate);
-                camera.rotation.order = 'YXZ'; camera.rotation.y = lookYaw; camera.rotation.x = lookPitch;
-                const dir = new THREE.Vector3(moveSide, 0, -moveFwd).applyQuaternion(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), lookYaw));
-                camera.position.addScaledVector(dir, 0.12); camera.position.y = 1.7;
-                set(playerRef, { x: camera.position.x, y: camera.position.y, z: camera.position.z, ry: camera.rotation.y, isDead: false, hp: 100, color: myColor });
-                renderer.render(scene, camera);
-            }
-            animate();
-            window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
-        }
-    </script>
+    <script type="module" src="game.js"></script>
 </body>
 </html>
